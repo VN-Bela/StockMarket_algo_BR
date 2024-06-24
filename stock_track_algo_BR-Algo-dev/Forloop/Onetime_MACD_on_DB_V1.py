@@ -182,12 +182,7 @@ def identify_signals(data):
     data.loc[data['Crossover'] > 0, 'Signal'] = 1
     data.loc[data['Crossover'] < 0, 'Signal'] = -1
     
-    # if data['Signal'].iloc[-1] == 1 and data['Signal'].iloc[-2] == -1:
-    #     message= f"Buy Signal on {data.index[-1].date()} at price {data['Close'].iloc[-1]}"
-    # elif data['Signal'].iloc[-1] == -1 and data['Signal'].iloc[-2] == 1:
-    #     message= f"Sell Signal on {data.index[-1].date()} at price {data['Close'].iloc[-1]}"
-
-    return message
+ 
 def initial_fetch_data(symbol, date):
     date = datetime.strptime(date, '%Y-%m-%d')
 

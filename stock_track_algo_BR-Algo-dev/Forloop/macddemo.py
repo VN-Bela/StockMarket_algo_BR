@@ -277,101 +277,157 @@ def calculate_macd(data, short_window=34, large_window=81, signal_window=9):
     data['1d_Signal'] = 0
     data.loc[data['1d_Crossover'] > 0, '1d_Signal'] = 1
     data.loc[data['1d_Crossover'] < 0, '1d_Signal'] = -1
+
     return data
 
-def macd_crossover_signal(data,symbol):
+#  def macd_crossover_signal(data,symbol):
     
+#     message=""
+    
+#     signal_1d = data['1d_Signal'].values
+#     signal_60m = data['60m_Signal'].values
+#     signal_15m = data['15m_Signal'].values
+#     signal_5m = data['5m_Signal'].values
+  
+    
+    
+#     if ((signal_1d[-1] == 0) & (signal_1d[-2] == 1) & ( signal_60m[-1] == 0) & ( signal_15m[-1] == 0)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to below signal line in 1 day time interval and is continued from 60 minutes and 15 minutes time frame as well"
+#         print("======redy=======")
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+
+#     elif ((signal_1d[-1] == 0) & (signal_1d[-2] == 1) & ( signal_60m[-1] == 0)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n Cross Below Signal Line in 1 day time interval and is continued from 60 minutes time frame as well"
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+
+#     elif ((signal_1d[-1] == 0) & (signal_1d[-2] == 1)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n Cross Below Signal Line in 1 day time interval"
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+
+
+#     elif ((signal_1d[-1] == 1) & (signal_1d[-2] == 0) & ( signal_60m[-1] == 1) & ( signal_15m[-1] == 1)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to above signal line in 1 day time interval and is continued from 60 minutes and 15 minutes time frame as well"
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+
+#     elif ((signal_1d[-1] == 1) & (signal_1d[-2] == 0) & ( signal_60m[-1] == 1)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to above signal line in 1 day time interval and is continued from 60 minutes time frame as well"
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+
+#     elif ((signal_1d[-1] == 1) & (signal_1d[-2] == 0)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n Cross Above Signal Line in 1 day time interval"
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+#     else:
+#         print("No significant crossover detected in 1 day time interval!")
+        
+#     if (( signal_60m[-1] == 0) & ( signal_60m[-2] == 1) &  (signal_15m[-1] == 0)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to below signal line in 60m time interval and is continued from 15 minutes time frame as well"
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+
+#     elif (( signal_60m[-1] == 0) & ( signal_60m[-2] == 1)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n Cross Below Signal Line in 60m time interval"
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+
+
+#     elif (( signal_60m[-1] == 1) & ( signal_60m[-2] == 0) & ( signal_15m[-1] == 1)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to above signal line in 60m time interval and is continued from 15 minutes time frame as well"
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+
+#     elif (( signal_60m[-1] == 1) & (signal_60m[-2] == 0)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n Cross Above Signal Line in 60m time interval"
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+
+#     else:
+#         print("No significant crossover detected in 60m time interval!")
+
+
+#     if (( signal_15m[-1] == 0) & (signal_15m[-2] == 1) & (signal_5m[-1] == 0)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to below signal line in 15 minutes time inetrval and is continued from 5 minutes time frame as well"
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+
+#     elif (( signal_15m[-1] == 0) & ( signal_15m[-2] == 1)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n Cross Below Signal Line in 15m time interval"
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+
+
+#     elif (( signal_15m[-1] == 1) & ( signal_15m[-2] == 0) & (signal_5m[-1] == 1)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to above signal line in 15 minutes time inetrval and is continued from 5 minutes time frame as well"
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+
+#     elif (( signal_15m[-1] == 1) & ( signal_15m[-2] == 0)):
+#         message = f"MACD Crossover Alert: \n{symbol} \n Cross Above Signal Line in 15m time interval"
+#         # send_whatsapp_messages("leads.csv", message)
+#         # send_email(message_text=message)
+
+#     else:
+#         print("No significant crossover detected in 15m time interval!")
+
+#     return message
+
+def macd_crossover_signal(data, symbol):
+    message = ""
+    data.to_csv('macd_signal_data.csv')
     signal_1d = data['1d_Signal'].values
     signal_60m = data['60m_Signal'].values
     signal_15m = data['15m_Signal'].values
-    signal_5m=data['5m_Signal'].values
-    
-    message=""
-    
-    if ((data['1d_Signal'].iloc[-1] == 0) & (data['1d_Signal'].iloc[-2] == 1) & (data['60m_Signal'].iloc[-1] == 0) & (data['15m_Signal'].iloc[-1] == 0)):
-        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to below signal line in 1 day time interval and is continued from 60 minutes and 15 minutes time frame as well"
-        print("======redy=======")
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
+    signal_5m = data['5m_Signal'].values
 
-    elif ((data['1d_Signal'].iloc[-1] == 0) & (data['1d_Signal'].iloc[-2] == 1) & (data['60m_Signal'].iloc[-1] == 0)):
+    print(f"Signals - 1d: {signal_1d[-2:]} 60m: {signal_60m[-2:]} 15m: {signal_15m[-2:]} 5m: {signal_5m[-2:]}")
+
+    # Daily Crossovers
+    if ((signal_1d[-1] == 0) & (signal_1d[-2] == 1) & (signal_60m[-1] == 0) & (signal_15m[-1] == 0)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The crossover to below signal line in 1 day time interval and is continued from 60 minutes and 15 minutes time frame as well"
+    elif ((signal_1d[-1] == 0) & (signal_1d[-2] == 1) & (signal_60m[-1] == 0)):
         message = f"MACD Crossover Alert: \n{symbol} \n Cross Below Signal Line in 1 day time interval and is continued from 60 minutes time frame as well"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-    elif ((data['1d_Signal'].iloc[-1] == 0) & (data['1d_Signal'].iloc[-2] == 1)):
+    elif ((signal_1d[-1] == 0) & (signal_1d[-2] == 1)):
         message = f"MACD Crossover Alert: \n{symbol} \n Cross Below Signal Line in 1 day time interval"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-
-    elif ((data['1d_Signal'].iloc[-1] == 1) & (data['1d_Signal'].iloc[-2] == 0) & (data['60m_Signal'].iloc[-1] == 1) & (data['15m_Signal'].iloc[-1] == 1)):
-        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to above signal line in 1 day time interval and is continued from 60 minutes and 15 minutes time frame as well"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-    elif ((data['1d_Signal'].iloc[-1] == 1) & (data['1d_Signal'].iloc[-2] == 0) & (data['60m_Signal'].iloc[-1] == 1)):
-        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to above signal line in 1 day time interval and is continued from 60 minutes time frame as well"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-    elif ((data['1d_Signal'].iloc[-1] == 1) & (data['1d_Signal'].iloc[-2] == 0)):
+    elif ((signal_1d[-1] == 1) & (signal_1d[-2] == 0) & (signal_60m[-1] == 1) & (signal_15m[-1] == 1)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The crossover to above signal line in 1 day time interval and is continued from 60 minutes and 15 minutes time frame as well"
+    elif ((signal_1d[-1] == 1) & (signal_1d[-2] == 0) & (signal_60m[-1] == 1)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The crossover to above signal line in 1 day time interval and is continued from 60 minutes time frame as well"
+    elif ((signal_1d[-1] == 1) & (signal_1d[-2] == 0)):
         message = f"MACD Crossover Alert: \n{symbol} \n Cross Above Signal Line in 1 day time interval"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
     else:
         print("No significant crossover detected in 1 day time interval!")
-        
-    if ((data['60m_Signal'].iloc[-1] == 0) & (data['60m_Signal'].iloc[-2] == 1) & (data['15m_Signal'].iloc[-1] == 0)):
-        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to below signal line in 60m time interval and is continued from 15 minutes time frame as well"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
 
-    elif ((data['60m_Signal'].iloc[-1] == 0) & (data['60m_Signal'].iloc[-2] == 1)):
+    # 60-minute Crossovers
+    if ((signal_60m[-1] == 0) & (signal_60m[-2] == 1) & (signal_15m[-1] == 0)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The crossover to below signal line in 60m time interval and is continued from 15 minutes time frame as well"
+    elif ((signal_60m[-1] == 0) & (signal_60m[-2] == 1)):
         message = f"MACD Crossover Alert: \n{symbol} \n Cross Below Signal Line in 60m time interval"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-
-    elif ((data['60m_Signal'].iloc[-1] == 1) & (data['60m_Signal'].iloc[-2] == 0) & (data['15m_Signal'].iloc[-1] == 1)):
-        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to above signal line in 60m time interval and is continued from 15 minutes time frame as well"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-    elif ((data['60m_Signal'].iloc[-1] == 1) & (data['60m_Signal'].iloc[-2] == 0)):
+    elif ((signal_60m[-1] == 1) & (signal_60m[-2] == 0) & (signal_15m[-1] == 1)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The crossover to above signal line in 60m time interval and is continued from 15 minutes time frame as well"
+    elif ((signal_60m[-1] == 1) & (signal_60m[-2] == 0)):
         message = f"MACD Crossover Alert: \n{symbol} \n Cross Above Signal Line in 60m time interval"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
     else:
         print("No significant crossover detected in 60m time interval!")
 
-
-    if ((data['15m_Signal'].iloc[-1] == 0) & (data['15m_Signal'].iloc[-2] == 1) & (data['5m_Signal'].iloc[-1] == 0)):
-        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to below signal line in 15 minutes time inetrval and is continued from 5 minutes time frame as well"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-    elif ((data['15m_Signal'].iloc[-1] == 0) & (data['15m_Signal'].iloc[-2] == 1)):
+    # 15-minute Crossovers
+    if ((signal_15m[-1] == 0) & (signal_15m[-2] == 1) & (signal_5m[-1] == 0)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The crossover to below signal line in 15 minutes time interval and is continued from 5 minutes time frame as well"
+    elif ((signal_15m[-1] == 0) & (signal_15m[-2] == 1)):
         message = f"MACD Crossover Alert: \n{symbol} \n Cross Below Signal Line in 15m time interval"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-
-    elif ((data['15m_Signal'].iloc[-1] == 1) & (data['15m_Signal'].iloc[-2] == 0) & (data['5m_Signal'].iloc[-1] == 1)):
-        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to above signal line in 15 minutes time inetrval and is continued from 5 minutes time frame as well"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-    elif ((data['15m_Signal'].iloc[-1] == 1) & (data['15m_Signal'].iloc[-2] == 0)):
+    elif ((signal_15m[-1] == 1) & (signal_15m[-2] == 0) & (signal_5m[-1] == 1)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The crossover to above signal line in 15 minutes time interval and is continued from 5 minutes time frame as well"
+    elif ((signal_15m[-1] == 1) & (signal_15m[-2] == 0)):
         message = f"MACD Crossover Alert: \n{symbol} \n Cross Above Signal Line in 15m time interval"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
     else:
         print("No significant crossover detected in 15m time interval!")
+
     return message
+
 
 
 # Reflect the database tables
@@ -426,7 +482,7 @@ while True:
         msg  =  macd_crossover_signal(data,stock_symbol.upper())
         print(msg)
         if msg:
-            combine_msgs.append(msg.to_string())
+            combine_msgs.append(msg)
 
         # Track time for this stock
         time_tracking_data.append(track_time(stock_symbol, start_time))
