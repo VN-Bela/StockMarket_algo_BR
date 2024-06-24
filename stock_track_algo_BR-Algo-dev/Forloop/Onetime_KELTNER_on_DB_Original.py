@@ -248,386 +248,342 @@ def keltner_channel_plot(data, symbol, kc_lookback=20, multiplier=2, atr_lookbac
 
     # Keltner Channel Calculation 5 minutes data
     
-    # tr1_5m = pd.DataFrame(data['5m_High'] - data['5m_Low'])
-    # tr2_5m = pd.DataFrame(abs(data['5m_High'] - data['5m_Close'].shift()))
-    # tr3_5m = pd.DataFrame(abs(data[''] - data['5m_Close'].shift()))
-    # frames_5m = [tr1_5m, tr2_5m, tr3_5m]
-    # tr_5m = pd.concat(frames_5m, axis=1, join='inner').max(axis=1)
-    # atr_5m = tr_5m.ewm(alpha=1 / atr_lookback).mean()
-    # kc_middle_5m = data['5m_Close'].ewm(kc_loo5m_Lowkback).mean()
-    # kc_upper_5m = data['5m_Close'].ewm(kc_lookback).mean() + multiplier * atr_5m
-    # kc_lower_5m = data['5m_Close'].ewm(kc_lookback).mean() - multiplier * atr_5m
-    data['5m_TR'] = np.maximum(data['5m_High'] - data['5m_Low'], np.maximum(abs(data['5m_High'] - data['5m_Close'].shift(1)), abs(data['5m_Low'] - data['5m_Close'].shift())))
-    data['5m_ATR'] = data['5m_TR'].rolling(window=atr_lookback).mean()
-    data['kc_middle_5m'] = data['5m_Close'].ewm(span=kc_lookback, adjust=False).mean()
-    data['kc_upper_5m'] = data['kc_middle_5m'] + data['5m_ATR'] * multiplier
-    data['kc_lower_5m'] = data['kc_middle_5m'] - data['5m_ATR'] * multiplier
-
-    # Keltner Channel Strategy Implementation
-    data['Upper_Signal_5m'] = np.where(data['5m_Close'] > data['kc_upper_5m'], 1, 0)
-    data['Middle_Signal_5m'] = np.where(data['5m_Close'] < data['kc_middle_5m'], -1, 0)
-    data['Lower_Signal_5m'] = np.where(data['5m_Close'] < data['kc_lower_5m'], -1, 0)
-    
-    # buy_price_5m = []
-    # sell_price_5m = []
-    # kc_signal_5m = []
-    # signal_5m = 0
-    # mid_buy_price_5m = []
-    # mid_sell_price_5m = []
-    # mid_kc_signal_5m = []
-    # mid_signal = 0
+    tr1_5m = pd.DataFrame(data['5m_High'] - data['5m_Low'])
+    tr2_5m = pd.DataFrame(abs(data['5m_High'] - data['5m_Close'].shift()))
+    tr3_5m = pd.DataFrame(abs(data[''] - data['5m_Close'].shift()))
+    frames_5m = [tr1_5m, tr2_5m, tr3_5m]
+    tr_5m = pd.concat(frames_5m, axis=1, join='inner').max(axis=1)
+    atr_5m = tr_5m.ewm(alpha=1 / atr_lookback).mean()
+    kc_middle_5m = data['5m_Close'].ewm(kc_loo5m_Lowkback).mean()
+    kc_upper_5m = data['5m_Close'].ewm(kc_lookback).mean() + multiplier * atr_5m
+    kc_lower_5m = data['5m_Close'].ewm(kc_lookback).mean() - multiplier * atr_5m
+      
+    buy_price_5m = []
+    sell_price_5m = []
+    kc_signal_5m = []
+    signal_5m = 0
+    mid_buy_price_5m = []
+    mid_sell_price_5m = []
+    mid_kc_signal_5m = []
+    mid_signal = 0
 
 
-    # for i in range(len(data) - 1):
+    for i in range(len(data) - 1):
 
-    #     if data['5m_Close'].iloc[i] > kc_middle_5m.iloc[i] and data['5m_Close'].iloc[i + 1] < data['5m_Close'].iloc[i]:
-    #         if mid_signal != 1:
-    #             mid_buy_price_5m.append(data['5m_Close'].iloc[i])
-    #             mid_sell_price_5m.append(np.nan)
-    #             mid_signal = 1
-    #             mid_kc_signal_5m.append(mid_signal)
-    #         else:
-    #             mid_buy_price_5m.append(np.nan)
-    #             mid_sell_price_5m.append(np.nan)
-    #             mid_kc_signal_5m.append(0)
+        if data['5m_Close'].iloc[i] > kc_middle_5m.iloc[i] and data['5m_Close'].iloc[i + 1] < data['5m_Close'].iloc[i]:
+            if mid_signal != 1:
+                mid_buy_price_5m.append(data['5m_Close'].iloc[i])
+                mid_sell_price_5m.append(np.nan)
+                mid_signal = 1
+                mid_kc_signal_5m.append(mid_signal)
+            else:
+                mid_buy_price_5m.append(np.nan)
+                mid_sell_price_5m.append(np.nan)
+                mid_kc_signal_5m.append(0)
 
-    #     elif data['5m_Close'].iloc[i] < kc_middle_5m.iloc[i] and data['5m_Close'].iloc[i + 1] > data['5m_Close'].iloc[i]:
-    #         if mid_signal != -1:
-    #             mid_buy_price_5m.append(np.nan)
-    #             mid_sell_price_5m.append(data['5m_Close'].iloc[i])
-    #             mid_signal = -1
-    #             mid_kc_signal_5m.append(mid_signal)
-    #         else:
-    #             mid_buy_price_5m.append(np.nan)
-    #             mid_sell_price_5m.append(np.nan)
-    #             mid_kc_signal_5m.append(0)
+        elif data['5m_Close'].iloc[i] < kc_middle_5m.iloc[i] and data['5m_Close'].iloc[i + 1] > data['5m_Close'].iloc[i]:
+            if mid_signal != -1:
+                mid_buy_price_5m.append(np.nan)
+                mid_sell_price_5m.append(data['5m_Close'].iloc[i])
+                mid_signal = -1
+                mid_kc_signal_5m.append(mid_signal)
+            else:
+                mid_buy_price_5m.append(np.nan)
+                mid_sell_price_5m.append(np.nan)
+                mid_kc_signal_5m.append(0)
 
-    #     else:
-    #         mid_buy_price_5m.append(np.nan)
-    #         mid_sell_price_5m.append(np.nan)
-    #         mid_kc_signal_5m.append(0)
+        else:
+            mid_buy_price_5m.append(np.nan)
+            mid_sell_price_5m.append(np.nan)
+            mid_kc_signal_5m.append(0)
 
-    #     if data['5m_Close'].iloc[i] < kc_lower_5m.iloc[i] and data['5m_Close'].iloc[i + 1] > data['5m_Close'].iloc[i]:
-    #         if signal_5m != 1:
-    #             buy_price_5m.append(data['5m_Close'].iloc[i])
-    #             sell_price_5m.append(np.nan)
-    #             signal_5m = 1
-    #             kc_signal_5m.append(signal_5m)
-    #         else:
-    #             buy_price_5m.append(np.nan)
-    #             sell_price_5m.append(np.nan)
-    #             kc_signal_5m.append(0)
-    #     elif data['5m_Close'].iloc[i] > kc_upper_5m.iloc[i] and data['5m_Close'].iloc[i + 1] < data['5m_Close'].iloc[i]:
-    #         if signal_5m != -1:
-    #             buy_price_5m.append(np.nan)
-    #             sell_price_5m.append(data['5m_Close'].iloc[i])
-    #             signal_5m = -1
-    #             kc_signal_5m.append(signal_5m)
-    #         else:
-    #             buy_price_5m.append(np.nan)
-    #             sell_price_5m.append(np.nan)
-    #             kc_signal_5m.append(0)
-    #     else:
-    #         buy_price_5m.append(np.nan)
-    #         sell_price_5m.append(np.nan)
-    #         kc_signal_5m.append(0)
+        if data['5m_Close'].iloc[i] < kc_lower_5m.iloc[i] and data['5m_Close'].iloc[i + 1] > data['5m_Close'].iloc[i]:
+            if signal_5m != 1:
+                buy_price_5m.append(data['5m_Close'].iloc[i])
+                sell_price_5m.append(np.nan)
+                signal_5m = 1
+                kc_signal_5m.append(signal_5m)
+            else:
+                buy_price_5m.append(np.nan)
+                sell_price_5m.append(np.nan)
+                kc_signal_5m.append(0)
+        elif data['5m_Close'].iloc[i] > kc_upper_5m.iloc[i] and data['5m_Close'].iloc[i + 1] < data['5m_Close'].iloc[i]:
+            if signal_5m != -1:
+                buy_price_5m.append(np.nan)
+                sell_price_5m.append(data['5m_Close'].iloc[i])
+                signal_5m = -1
+                kc_signal_5m.append(signal_5m)
+            else:
+                buy_price_5m.append(np.nan)
+                sell_price_5m.append(np.nan)
+                kc_signal_5m.append(0)
+        else:
+            buy_price_5m.append(np.nan)
+            sell_price_5m.append(np.nan)
+            kc_signal_5m.append(0)
 
 
     # Keltner Channel Calculation 15 minutes data
 
-    # tr1_15m = pd.DataFrame(data['15m_High'] - data['15m_Low'])
-    # tr2_15m = pd.DataFrame(abs(data['15m_High'] - data['15m_Close'].shift()))
-    # tr3_15m = pd.DataFrame(abs(data['15m_Low'] - data['15m_Close'].shift()))
-    # frames_15m = [tr1_15m, tr2_15m, tr3_15m]
-    # tr_15m = pd.concat(frames_15m, axis=1, join='inner').max(axis=1)
-    # atr_15m = tr_15m.ewm(alpha=1 / atr_lookback).mean()
-    # kc_middle_15m = data['15m_Close'].ewm(kc_lookback).mean()
-    # kc_upper_15m = data['15m_Close'].ewm(kc_lookback).mean() + multiplier * atr_15m
-    # kc_lower_15m = data['15m_Close'].ewm(kc_lookback).mean() - multiplier * atr_15m
-    data['15m_TR'] = np.maximum(data['15m_High'] - data['15m_Low'], np.maximum(abs(data['15m_High'] - data['15m_Close'].shift(1)), abs(data['15m_Low'] - data['15m_Close'].shift())))
-    data['15m_ATR'] = data['15m_TR'].rolling(window=atr_lookback).mean()
-    data['kc_middle_15m'] = data['15m_Close'].ewm(span=kc_lookback, adjust=False).mean()
-    data['kc_upper_15m'] = data['kc_middle_15m'] + data['15m_ATR'] * multiplier
-    data['kc_lower_15m'] = data['kc_middle_15m'] - data['15m_ATR'] * multiplier
-
-
+    tr1_15m = pd.DataFrame(data['15m_High'] - data['15m_Low'])
+    tr2_15m = pd.DataFrame(abs(data['15m_High'] - data['15m_Close'].shift()))
+    tr3_15m = pd.DataFrame(abs(data['15m_Low'] - data['15m_Close'].shift()))
+    frames_15m = [tr1_15m, tr2_15m, tr3_15m]
+    tr_15m = pd.concat(frames_15m, axis=1, join='inner').max(axis=1)
+    atr_15m = tr_15m.ewm(alpha=1 / atr_lookback).mean()
+    kc_middle_15m = data['15m_Close'].ewm(kc_lookback).mean()
+    kc_upper_15m = data['15m_Close'].ewm(kc_lookback).mean() + multiplier * atr_15m
+    kc_lower_15m = data['15m_Close'].ewm(kc_lookback).mean() - multiplier * atr_15m
+   
     # Keltner Channel Strategy Implementation
+  
+    buy_price_15m = []
+    sell_price_15m = []
+    kc_signal_15m = []
+    signal_15m = 0
+    mid_buy_price_15m = []
+    mid_sell_price_15m = []
+    mid_kc_signal_15m = []
+    mid_signal = 0
 
-    data['Upper_Signal_15m'] = np.where(data['15m_Close'] > data['kc_upper_15m'], 1, 0)
-    data['Middle_Signal_15m'] = np.where(data['15m_Close'] < data['kc_middle_15m'], -1, 0)
-    data['Lower_Signal_15m'] = np.where(data['5m_Close'] < data['kc_lower_15m'], -1, 0)
-    
-    # buy_price_15m = []
-    # sell_price_15m = []
-    # kc_signal_15m = []
-    # signal_15m = 0
-    # mid_buy_price_15m = []
-    # mid_sell_price_15m = []
-    # mid_kc_signal_15m = []
-    # mid_signal = 0
+    for i in range(len(data) - 1):
 
-    # for i in range(len(data) - 1):
+        if data['15m_Close'].iloc[i] > kc_middle_15m.iloc[i] and data['15m_Close'].iloc[i + 1] < data['15m_Close'].iloc[i]:
+            if mid_signal != 1:
+                mid_buy_price_15m.append(data['15m_Close'].iloc[i])
+                mid_sell_price_15m.append(np.nan)
+                mid_signal = 1
+                mid_kc_signal_15m.append(mid_signal)
+            else:
+                mid_buy_price_15m.append(np.nan)
+                mid_sell_price_15m.append(np.nan)
+                mid_kc_signal_15m.append(0)
 
-    #     if data['15m_Close'].iloc[i] > kc_middle_15m.iloc[i] and data['15m_Close'].iloc[i + 1] < data['15m_Close'].iloc[i]:
-    #         if mid_signal != 1:
-    #             mid_buy_price_15m.append(data['15m_Close'].iloc[i])
-    #             mid_sell_price_15m.append(np.nan)
-    #             mid_signal = 1
-    #             mid_kc_signal_15m.append(mid_signal)
-    #         else:
-    #             mid_buy_price_15m.append(np.nan)
-    #             mid_sell_price_15m.append(np.nan)
-    #             mid_kc_signal_15m.append(0)
+        elif data['15m_Close'].iloc[i] < kc_middle_15m.iloc[i] and data['15m_Close'].iloc[i + 1] > data['15m_Close'].iloc[i]:
+            if mid_signal != -1:
+                mid_buy_price_15m.append(np.nan)
+                mid_sell_price_15m.append(data['15m_Close'].iloc[i])
+                mid_signal = -1
+                mid_kc_signal_15m.append(mid_signal)
+            else:
+                mid_buy_price_15m.append(np.nan)
+                mid_sell_price_15m.append(np.nan)
+                mid_kc_signal_15m.append(0)
 
-    #     elif data['15m_Close'].iloc[i] < kc_middle_15m.iloc[i] and data['15m_Close'].iloc[i + 1] > data['15m_Close'].iloc[i]:
-    #         if mid_signal != -1:
-    #             mid_buy_price_15m.append(np.nan)
-    #             mid_sell_price_15m.append(data['15m_Close'].iloc[i])
-    #             mid_signal = -1
-    #             mid_kc_signal_15m.append(mid_signal)
-    #         else:
-    #             mid_buy_price_15m.append(np.nan)
-    #             mid_sell_price_15m.append(np.nan)
-    #             mid_kc_signal_15m.append(0)
+        else:
+            mid_buy_price_15m.append(np.nan)
+            mid_sell_price_15m.append(np.nan)
+            mid_kc_signal_15m.append(0)
 
-    #     else:
-    #         mid_buy_price_15m.append(np.nan)
-    #         mid_sell_price_15m.append(np.nan)
-    #         mid_kc_signal_15m.append(0)
-
-    #     if data['15m_Close'].iloc[i] < kc_lower_15m.iloc[i] and data['15m_Close'].iloc[i + 1] > data['15m_Close'].iloc[i]:
-    #         if signal_15m != 1:
-    #             buy_price_15m.append(data['15m_Close'].iloc[i])
-    #             sell_price_15m.append(np.nan)
-    #             signal_15m = 1
-    #             kc_signal_15m.append(signal_15m)
-    #         else:
-    #             buy_price_15m.append(np.nan)
-    #             sell_price_15m.append(np.nan)
-    #             kc_signal_15m.append(0)
-    #     elif data['15m_Close'].iloc[i] > kc_upper_15m.iloc[i] and data['15m_Close'].iloc[i + 1] < data['15m_Close'].iloc[i]:
-    #         if signal_15m != -1:
-    #             buy_price_15m.append(np.nan)
-    #             sell_price_15m.append(data['15m_Close'].iloc[i])
-    #             signal_15m = -1
-    #             kc_signal_15m.append(signal_15m)
-    #         else:
-    #             buy_price_15m.append(np.nan)
-    #             sell_price_15m.append(np.nan)
-    #             kc_signal_15m.append(0)
-    #     else:
-    #         buy_price_15m.append(np.nan)
-    #         sell_price_15m.append(np.nan)
-    #         kc_signal_15m.append(0)
+        if data['15m_Close'].iloc[i] < kc_lower_15m.iloc[i] and data['15m_Close'].iloc[i + 1] > data['15m_Close'].iloc[i]:
+            if signal_15m != 1:
+                buy_price_15m.append(data['15m_Close'].iloc[i])
+                sell_price_15m.append(np.nan)
+                signal_15m = 1
+                kc_signal_15m.append(signal_15m)
+            else:
+                buy_price_15m.append(np.nan)
+                sell_price_15m.append(np.nan)
+                kc_signal_15m.append(0)
+        elif data['15m_Close'].iloc[i] > kc_upper_15m.iloc[i] and data['15m_Close'].iloc[i + 1] < data['15m_Close'].iloc[i]:
+            if signal_15m != -1:
+                buy_price_15m.append(np.nan)
+                sell_price_15m.append(data['15m_Close'].iloc[i])
+                signal_15m = -1
+                kc_signal_15m.append(signal_15m)
+            else:
+                buy_price_15m.append(np.nan)
+                sell_price_15m.append(np.nan)
+                kc_signal_15m.append(0)
+        else:
+            buy_price_15m.append(np.nan)
+            sell_price_15m.append(np.nan)
+            kc_signal_15m.append(0)
 
     # Keltner Channel Calculation 60 minutes data
-    data['60m_TR'] = np.maximum(data['60m_High'] - data['60m_Low'], np.maximum(abs(data['60m_High'] - data['60m_Close'].shift(1)), abs(data['60m_Low'] - data['60m_Close'].shift())))
-    data['60m_ATR'] = data['60m_TR'].rolling(window=atr_lookback).mean()
-    data['kc_middle_60m'] = data['60m_Close'].ewm(span=kc_lookback, adjust=False).mean()
-    data['kc_upper_60m'] = data['kc_middle_60m'] + data['60m_ATR'] * multiplier
-    data['kc_lower_60m'] = data['kc_middle_60m'] - data['60m_ATR'] * multiplier
 
-    # tr1_60m = pd.DataFrame(data['60m_High'] - data['60m_Low'])
-    # tr2_60m = pd.DataFrame(abs(data['60m_High'] - data['60m_Close'].shift()))
-    # tr3_60m = pd.DataFrame(abs(data['60m_Low'] - data['60m_Close'].shift()))
-    # frames_60m = [tr1_60m, tr2_60m, tr3_60m]
-    # tr_60m = pd.concat(frames_60m, axis=1, join='inner').max(axis=1)
-    # atr_60m = tr_60m.ewm(alpha=1 / atr_lookback).mean()
-    # kc_middle_60m = data['60m_Close'].ewm(kc_lookback).mean()
-    # kc_upper_60m = data['60m_Close'].ewm(kc_lookback).mean() + multiplier * atr_60m
-    # kc_lower_60m = data['60m_Close'].ewm(kc_lookback).mean() - multiplier * atr_60m
+    tr1_60m = pd.DataFrame(data['60m_High'] - data['60m_Low'])
+    tr2_60m = pd.DataFrame(abs(data['60m_High'] - data['60m_Close'].shift()))
+    tr3_60m = pd.DataFrame(abs(data['60m_Low'] - data['60m_Close'].shift()))
+    frames_60m = [tr1_60m, tr2_60m, tr3_60m]
+    tr_60m = pd.concat(frames_60m, axis=1, join='inner').max(axis=1)
+    atr_60m = tr_60m.ewm(alpha=1 / atr_lookback).mean()
+    kc_middle_60m = data['60m_Close'].ewm(kc_lookback).mean()
+    kc_upper_60m = data['60m_Close'].ewm(kc_lookback).mean() + multiplier * atr_60m
+    kc_lower_60m = data['60m_Close'].ewm(kc_lookback).mean() - multiplier * atr_60m
 
     
     # Keltner Channel Strategy Implementation
 
-    data['Upper_Signal_60m'] = np.where(data['60m_Close'] > data['kc_upper_60m'], 1, 0)
-    data['Middle_Signal_60m'] = np.where(data['60m_Close'] < data['kc_middle_60m'], -1, 0)
-    data['Lower_Signal_60m'] = np.where(data['60m_Close'] < data['kc_lower_60m'], -1, 0)
-    
-    # # Keltner Channel Strategy Implementation
-    # buy_price_60m = []
-    # sell_price_60m = []
-    # kc_signal_60m = []
-    # signal_60m = 0
-    # mid_buy_price_60m = []
-    # mid_sell_price_60m = []
-    # mid_kc_signal_60m = []
-    # mid_signal = 0
+    buy_price_60m = []
+    sell_price_60m = []
+    kc_signal_60m = []
+    signal_60m = 0
+    mid_buy_price_60m = []
+    mid_sell_price_60m = []
+    mid_kc_signal_60m = []
+    mid_signal = 0
 
 
-    # for i in range(len(data) - 1):
+    for i in range(len(data) - 1):
 
-    #     if data['60m_Close'].iloc[i] > kc_middle_60m.iloc[i] and data['60m_Close'].iloc[i + 1] < data['60m_Close'].iloc[i]:
-    #         if mid_signal != 1:
-    #             mid_buy_price_60m.append(data['60m_Close'].iloc[i])
-    #             mid_sell_price_60m.append(np.nan)
-    #             mid_signal = 1
-    #             mid_kc_signal_60m.append(mid_signal)
-    #         else:
-    #             mid_buy_price_60m.append(np.nan)
-    #             mid_sell_price_60m.append(np.nan)
-    #             mid_kc_signal_60m.append(0)
+        if data['60m_Close'].iloc[i] > kc_middle_60m.iloc[i] and data['60m_Close'].iloc[i + 1] < data['60m_Close'].iloc[i]:
+            if mid_signal != 1:
+                mid_buy_price_60m.append(data['60m_Close'].iloc[i])
+                mid_sell_price_60m.append(np.nan)
+                mid_signal = 1
+                mid_kc_signal_60m.append(mid_signal)
+            else:
+                mid_buy_price_60m.append(np.nan)
+                mid_sell_price_60m.append(np.nan)
+                mid_kc_signal_60m.append(0)
 
-    #     elif data['60m_Close'].iloc[i] < kc_middle_60m.iloc[i] and data['60m_Close'].iloc[i + 1] > data['60m_Close'].iloc[i]:
-    #         if mid_signal != -1:
-    #             mid_buy_price_60m.append(np.nan)
-    #             mid_sell_price_60m.append(data['60m_Close'].iloc[i])
-    #             mid_signal = -1
-    #             mid_kc_signal_60m.append(mid_signal)
-    #         else:
-    #             mid_buy_price_60m.append(np.nan)
-    #             mid_sell_price_60m.append(np.nan)
-    #             mid_kc_signal_60m.append(0)
+        elif data['60m_Close'].iloc[i] < kc_middle_60m.iloc[i] and data['60m_Close'].iloc[i + 1] > data['60m_Close'].iloc[i]:
+            if mid_signal != -1:
+                mid_buy_price_60m.append(np.nan)
+                mid_sell_price_60m.append(data['60m_Close'].iloc[i])
+                mid_signal = -1
+                mid_kc_signal_60m.append(mid_signal)
+            else:
+                mid_buy_price_60m.append(np.nan)
+                mid_sell_price_60m.append(np.nan)
+                mid_kc_signal_60m.append(0)
 
-    #     else:
-    #         mid_buy_price_60m.append(np.nan)
-    #         mid_sell_price_60m.append(np.nan)
-    #         mid_kc_signal_60m.append(0)
+        else:
+            mid_buy_price_60m.append(np.nan)
+            mid_sell_price_60m.append(np.nan)
+            mid_kc_signal_60m.append(0)
 
-    #     if data['60m_Close'].iloc[i] < kc_lower_60m.iloc[i] and data['60m_Close'].iloc[i + 1] > data['60m_Close'].iloc[i]:
-    #         if signal_60m != 1:
-    #             buy_price_60m.append(data['60m_Close'].iloc[i])
-    #             sell_price_60m.append(np.nan)
-    #             signal_60m = 1
-    #             kc_signal_60m.append(signal_60m)
-    #         else:
-    #             buy_price_60m.append(np.nan)
-    #             sell_price_60m.append(np.nan)
-    #             kc_signal_60m.append(0)
-    #     elif data['60m_Close'].iloc[i] > kc_upper_60m.iloc[i] and data['60m_Close'].iloc[i + 1] < data['60m_Close'].iloc[i]:
-    #         if signal_60m != -1:
-    #             buy_price_60m.append(np.nan)
-    #             sell_price_60m.append(data['60m_Close'].iloc[i])
-    #             signal_60m = -1
-    #             kc_signal_60m.append(signal_60m)
-    #         else:
-    #             buy_price_60m.append(np.nan)
-    #             sell_price_60m.append(np.nan)
-    #             kc_signal_60m.append(0)
-    #     else:
-    #         buy_price_60m.append(np.nan)
-    #         sell_price_60m.append(np.nan)
-    #         kc_signal_60m.append(0)
+        if data['60m_Close'].iloc[i] < kc_lower_60m.iloc[i] and data['60m_Close'].iloc[i + 1] > data['60m_Close'].iloc[i]:
+            if signal_60m != 1:
+                buy_price_60m.append(data['60m_Close'].iloc[i])
+                sell_price_60m.append(np.nan)
+                signal_60m = 1
+                kc_signal_60m.append(signal_60m)
+            else:
+                buy_price_60m.append(np.nan)
+                sell_price_60m.append(np.nan)
+                kc_signal_60m.append(0)
+        elif data['60m_Close'].iloc[i] > kc_upper_60m.iloc[i] and data['60m_Close'].iloc[i + 1] < data['60m_Close'].iloc[i]:
+            if signal_60m != -1:
+                buy_price_60m.append(np.nan)
+                sell_price_60m.append(data['60m_Close'].iloc[i])
+                signal_60m = -1
+                kc_signal_60m.append(signal_60m)
+            else:
+                buy_price_60m.append(np.nan)
+                sell_price_60m.append(np.nan)
+                kc_signal_60m.append(0)
+        else:
+            buy_price_60m.append(np.nan)
+            sell_price_60m.append(np.nan)
+            kc_signal_60m.append(0)
 
     # Keltner Channel Calculation 60 minutes data
-    data['1d_TR'] = np.maximum(data['1d_High'] - data['1d_Low'], np.maximum(abs(data['1d_High'] - data['1d_Close'].shift(1)), abs(data['1d_Low'] - data['1d_Close'].shift())))
-    data['1d_ATR'] = data['1d_TR'].rolling(window=kc_lookback).mean()
-    data['kc_middle_1d'] = data['1d_Close'].ewm(span=kc_lookback, adjust=False).mean()
-    data['kc_upper_1d'] = data['kc_middle_1d'] + data['1d_ATR'] * multiplier
-    data['kc_lower_1d'] = data['kc_middle_1d'] - data['1d_ATR'] * multiplier
+ 
+    # Keltner Channel Strategy Implementation
+    tr1_1d = pd.DataFrame(data['1d_High'] - data['1d_Low'])
+    tr2_1d = pd.DataFrame(abs(data['1d_High'] - data['1d_Close'].shift()))
+    tr3_1d = pd.DataFrame(abs(data['1d_Low'] - data['1d_Close'].shift()))
+    frames_1d = [tr1_1d, tr2_1d, tr3_1d]
+    tr_1d = pd.concat(frames_1d, axis=1, join='inner').max(axis=1)
+    atr_1d = tr_1d.ewm(alpha=1 / atr_lookback).mean()
+    kc_middle_1d = data['1d_Close'].ewm(kc_lookback).mean()
+    kc_upper_1d = data['1d_Close'].ewm(kc_lookback).mean() + multiplier * atr_1d
+    kc_lower_1d = data['1d_Close'].ewm(kc_lookback).mean() - multiplier * atr_1d
 
     # Keltner Channel Strategy Implementation
-
-    data['Upper_Signal_1d'] = np.where(data['1d_Close'] > data['kc_upper_1d'], 1, 0)
-    data['Middle_Signal_1d'] = np.where(data['1d_Close'] < data['kc_middle_1d'], -1, 0)
-    data['Lower_Signal_1d'] = np.where(data['1d_Close'] < data['kc_lower_1d'], -1, 0)
-
-    # tr1_1d = pd.DataFrame(data['1d_High'] - data['1d_Low'])
-    # tr2_1d = pd.DataFrame(abs(data['1d_High'] - data['1d_Close'].shift()))
-    # tr3_1d = pd.DataFrame(abs(data['1d_Low'] - data['1d_Close'].shift()))
-    # frames_1d = [tr1_1d, tr2_1d, tr3_1d]
-    # tr_1d = pd.concat(frames_1d, axis=1, join='inner').max(axis=1)
-    # atr_1d = tr_1d.ewm(alpha=1 / atr_lookback).mean()
-    # kc_middle_1d = data['1d_Close'].ewm(kc_lookback).mean()
-    # kc_upper_1d = data['1d_Close'].ewm(kc_lookback).mean() + multiplier * atr_1d
-    # kc_lower_1d = data['1d_Close'].ewm(kc_lookback).mean() - multiplier * atr_1d
-
-    # Keltner Channel Strategy Implementation
-    # buy_price_1d = []
-    # sell_price_1d = []
-    # kc_signal_1d = []
-    # signal_1d = 0
-    # mid_buy_price_1d = []
-    # mid_sell_price_1d = []
-    # mid_kc_signal_1d = []
-    # mid_signal = 0
+    buy_price_1d = []
+    sell_price_1d = []
+    kc_signal_1d = []
+    signal_1d = 0
+    mid_buy_price_1d = []
+    mid_sell_price_1d = []
+    mid_kc_signal_1d = []
+    mid_signal = 0
 
 
-    # for i in range(len(data) - 1):
+    for i in range(len(data) - 1):
 
-    #     if data['1d_Close'].iloc[i] > kc_middle_1d.iloc[i] and data['1d_Close'].iloc[i + 1] < data['1d_Close'].iloc[i]:
-    #         if mid_signal != 1:
-    #             mid_buy_price_1d.append(data['1d_Close'].iloc[i])
-    #             mid_sell_price_1d.append(np.nan)
-    #             mid_signal = 1
-    #             mid_kc_signal_1d.append(mid_signal)
-    #         else:
-    #             mid_buy_price_1d.append(np.nan)
-    #             mid_sell_price_1d.append(np.nan)
-    #             mid_kc_signal_1d.append(0)
+        if data['1d_Close'].iloc[i] > kc_middle_1d.iloc[i] and data['1d_Close'].iloc[i + 1] < data['1d_Close'].iloc[i]:
+            if mid_signal != 1:
+                mid_buy_price_1d.append(data['1d_Close'].iloc[i])
+                mid_sell_price_1d.append(np.nan)
+                mid_signal = 1
+                mid_kc_signal_1d.append(mid_signal)
+            else:
+                mid_buy_price_1d.append(np.nan)
+                mid_sell_price_1d.append(np.nan)
+                mid_kc_signal_1d.append(0)
 
-    #     elif data['1d_Close'].iloc[i] < kc_middle_1d.iloc[i] and data['1d_Close'].iloc[i + 1] > data['1d_Close'].iloc[i]:
-    #         if mid_signal != -1:
-    #             mid_buy_price_1d.append(np.nan)
-    #             mid_sell_price_1d.append(data['1d_Close'].iloc[i])
-    #             mid_signal = -1
-    #             mid_kc_signal_1d.append(mid_signal)
-    #         else:
-    #             mid_buy_price_1d.append(np.nan)
-    #             mid_sell_price_1d.append(np.nan)
-    #             mid_kc_signal_1d.append(0)
+        elif data['1d_Close'].iloc[i] < kc_middle_1d.iloc[i] and data['1d_Close'].iloc[i + 1] > data['1d_Close'].iloc[i]:
+            if mid_signal != -1:
+                mid_buy_price_1d.append(np.nan)
+                mid_sell_price_1d.append(data['1d_Close'].iloc[i])
+                mid_signal = -1
+                mid_kc_signal_1d.append(mid_signal)
+            else:
+                mid_buy_price_1d.append(np.nan)
+                mid_sell_price_1d.append(np.nan)
+                mid_kc_signal_1d.append(0)
 
-    #     else:
-    #         mid_buy_price_1d.append(np.nan)
-    #         mid_sell_price_1d.append(np.nan)
-    #         mid_kc_signal_1d.append(0)
+        else:
+            mid_buy_price_1d.append(np.nan)
+            mid_sell_price_1d.append(np.nan)
+            mid_kc_signal_1d.append(0)
 
-    #     if data['1d_Close'].iloc[i] < kc_lower_1d.iloc[i] and data['1d_Close'].iloc[i + 1] > data['1d_Close'].iloc[i]:
-    #         if signal_1d != 1:
-    #             buy_price_1d.append(data['1d_Close'].iloc[i])
-    #             sell_price_1d.append(np.nan)
-    #             signal_1d = 1
-    #             kc_signal_1d.append(signal_1d)
-    #         else:
-    #             buy_price_1d.append(np.nan)
-    #             sell_price_1d.append(np.nan)
-    #             kc_signal_1d.append(0)
-    #     elif data['1d_Close'].iloc[i] > kc_upper_1d.iloc[i] and data['1d_Close'].iloc[i + 1] < data['1d_Close'].iloc[i]:
-    #         if signal_1d != -1:
-    #             buy_price_1d.append(np.nan)
-    #             sell_price_1d.append(data['1d_Close'].iloc[i])
-    #             signal_1d = -1
-    #             kc_signal_1d.append(signal_1d)
-    #         else:
-    #             buy_price_1d.append(np.nan)
-    #             sell_price_1d.append(np.nan)
-    #             kc_signal_1d.append(0)
-    #     else:
-    #         buy_price_1d.append(np.nan)
-    #         sell_price_1d.append(np.nan)
-    #         kc_signal_1d.append(0)
+        if data['1d_Close'].iloc[i] < kc_lower_1d.iloc[i] and data['1d_Close'].iloc[i + 1] > data['1d_Close'].iloc[i]:
+            if signal_1d != 1:
+                buy_price_1d.append(data['1d_Close'].iloc[i])
+                sell_price_1d.append(np.nan)
+                signal_1d = 1
+                kc_signal_1d.append(signal_1d)
+            else:
+                buy_price_1d.append(np.nan)
+                sell_price_1d.append(np.nan)
+                kc_signal_1d.append(0)
+        elif data['1d_Close'].iloc[i] > kc_upper_1d.iloc[i] and data['1d_Close'].iloc[i + 1] < data['1d_Close'].iloc[i]:
+            if signal_1d != -1:
+                buy_price_1d.append(np.nan)
+                sell_price_1d.append(data['1d_Close'].iloc[i])
+                signal_1d = -1
+                kc_signal_1d.append(signal_1d)
+            else:
+                buy_price_1d.append(np.nan)
+                sell_price_1d.append(np.nan)
+                kc_signal_1d.append(0)
+        else:
+            buy_price_1d.append(np.nan)
+            sell_price_1d.append(np.nan)
+            kc_signal_1d.append(0)
 
 # # Check if a new buy or sell signal is generated in 5min timeframe
 
-#     if (mid_kc_signal_5m[-1] == -1) & (mid_kc_signal_5m[-2] == 1):
-#         message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 5min timeframe"
-#         # send_whatsapp_messages("leads.csv", message)
-#         # send_email(message_text=message)
+    if (mid_kc_signal_5m[-1] == -1) & (mid_kc_signal_5m[-2] == 1):
+        message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 5min timeframe"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
 
-#     elif (kc_signal_5m[-1] == -1) & (kc_signal_5m[-2] == 1):
-#         message = f"Sell Signal:\n {symbol} \nPrice crossed above Upper Keltner Channel in 5min timeframe"
-#         # send_whatsapp_messages("leads.csv", message)  # Adjust the filename accordingly
-#         # send_email(message_text=message)  # Send a detailed email
+    elif (kc_signal_5m[-1] == -1) & (kc_signal_5m[-2] == 1):
+        message = f"Sell Signal:\n {symbol} \nPrice crossed above Upper Keltner Channel in 5min timeframe"
+        # send_whatsapp_messages("leads.csv", message)  # Adjust the filename accordingly
+        # send_email(message_text=message)  # Send a detailed email
     
-#     if (mid_kc_signal_5m[-1] == 1) & (mid_kc_signal_5m[-2] == -1):
-#         message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 5min timeframe"
-#         # send_whatsapp_messages("leads.csv", message)
-#         # send_email(message_text=message)
+    if (mid_kc_signal_5m[-1] == 1) & (mid_kc_signal_5m[-2] == -1):
+        message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 5min timeframe"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
 
-#     elif (kc_signal_5m[-1] == 1) & (kc_signal_5m[-2] == -1):
-#         message = f"Buy Signal: \n{symbol} \n Price crossed below Lower Keltner Channel in 5min timeframe"
-#         # send_whatsapp_messages("leads.csv", message)  # Adjust the filename accordingly
-#         # send_email(message_text=message)  # Send a detailed email
+    elif (kc_signal_5m[-1] == 1) & (kc_signal_5m[-2] == -1):
+        message = f"Buy Signal: \n{symbol} \n Price crossed below Lower Keltner Channel in 5min timeframe"
+        # send_whatsapp_messages("leads.csv", message)  # Adjust the filename accordingly
+        # send_email(message_text=message)  # Send a detailed email
 
-#     else:
-#         print("No Signal in 5min timeframe above Middle Keltner Channel or below Middle Keltner Channel")
+    else:
+        print("No Signal in 5min timeframe above Middle Keltner Channel or below Middle Keltner Channel")
   
     # Check if a new buy or sell signal is generated in 1day timeframe
-    mid_kc_signal_1d = data['Middle_Signal_1d'].values
-    mid_kc_signal_60m = data['Middle_Signal_60m'].values
-    mid_kc_signal_15m = data['Middle_Signal_15m'].values
-    mid_kc_signal_5m = data['Middle_Signal_5m'].values
-    
+   
     if (mid_kc_signal_1d[-1] == 1) & (mid_kc_signal_1d[-2] == -1) & (mid_kc_signal_60m[-1] == 1) & (mid_kc_signal_15m[-1] == 1) & (mid_kc_signal_5m[-1] == 1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 1day timeframe and also followed by 60min, 15min and 5min timeframes as well"
         # send_whatsapp_messages("leads.csv", message)
@@ -670,17 +626,7 @@ def keltner_channel_plot(data, symbol, kc_lookback=20, multiplier=2, atr_lookbac
 
     else:
         print("No Signal in 1day timeframe above Middle Keltner Channel or below Middle Keltner Channel")
-    upper_kc_signal_1d = data['Upper_Signal_1d'].values
-    upper_kc_signal_60m = data['Upper_Signal_60m'].values
-    upper_kc_signal_15m = data['Upper_Signal_15m'].values
-    upper_kc_signal_5m = data['Upper_Signal_5m'].values
-
-    lower_kc_signal_1d = data['Lower_Signal_1d'].values
-    lower_kc_signal_60m = data['Lower_Signal_60m'].values
-    lower_kc_signal_15m = data['Lower_Signal_15m'].values
-    lower_kc_signal_5m = data['Lower_Signal_5m'].values
-
-
+ 
     if (lower_kc_signal_1d[-1] == 1) & (lower_kc_signal_1d[-2] == -1) & (lower_kc_signal_60m[-1] == 1) & (lower_kc_signal_15m[-1] == 1) & (lower_kc_signal_5m[-1] == 1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Lower Keltner Channel in 1day timeframe and also followed by 60min, 15min and 5min timeframes as well"
         # send_whatsapp_messages("leads.csv", message)
@@ -723,8 +669,6 @@ def keltner_channel_plot(data, symbol, kc_lookback=20, multiplier=2, atr_lookbac
 
     else:
         print("No Signal in 1day timeframe above Upper Keltner Channel or below Lower Keltner Channel")
-
-
     
     # Check if a new buy or sell signal is generated in 60min timeframe
         
