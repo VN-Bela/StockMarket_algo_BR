@@ -14,9 +14,7 @@ from IPython.display import clear_output, display  # Library for clearing output
 import subprocess  # Library for subprocess management
 import re  # Library for regular expressions
 import pyautogui  # Library for GUI automation
-
 from plotly.subplots import make_subplots
-
 from sqlalchemy import create_engine, Table, MetaData  # Library for database connection
 
 user_name = "postgres"
@@ -72,7 +70,6 @@ def send_email(message_text):
     except Exception as e:
         print("Error Sending Email:", str(e))  # Print statement if an error occurs while sending the email
 
-
 # Function to send WhatsApp messages to numbers listed in a CSV file
 
 def send_whatsapp_messages(numbers_filename, message_text):
@@ -112,7 +109,7 @@ def send_whatsapp_messages(numbers_filename, message_text):
             print('Valid Number')
 
             raw_text = "Hello there, *{name}* !".format(name=i['Name'])
-            input_txt = raw_text.replace(" ", "%20")
+            text = raw_text.replace(" ", "%20")
             input_txt = input_txt.replace(' ', '%20')
             input_txt = input_txt.replace('\n', '%0A')
             input_txt = input_txt.replace(':)', '\U0001F601')
@@ -152,20 +149,9 @@ def send_whatsapp_messages(numbers_filename, message_text):
 
     rejected_num.to_csv('rejected_numbers.csv')
 
-
-# Initialize figure
-fig = go.Figure()
-
 def initial_fetch_data(symbol, date):
 
-    # if symbol == "^NSEI" or symbol == "^NSEBANK":
-    #     symbol = symbol.upper()
-    # else:
-    #     symbol = f"{symbol}.NS".upper()
-
     date = datetime.strptime(date, '%Y-%m-%d')
-    # temp_end = datetime.strptime("2024-01-31", '%Y-%m-%d')
-
     # Download 5-minute data
     min5 = yf.download(symbol, start=date, interval='5m')
     min5.index = min5.index.strftime('%Y-%m-%d %H:%M:%S') 
@@ -198,7 +184,7 @@ def initial_fetch_data(symbol, date):
     min60 = min60.reindex(columns=['Date','60m_Open', '60m_High', '60m_Low', '60m_Close', '60m_Adj Close', '60m_Volume'])
     min60 = min60.resample('5T').ffill()
 
-    # Download 60-minute data
+    # Download 1day data
     day1 = yf.download(symbol, start=date, interval='1d')
     day1.index = pd.to_datetime(day1.index)
     day1.index = day1.index.strftime('%Y-%m-%d %H:%M:%S')
@@ -226,10 +212,7 @@ def initial_fetch_data(symbol, date):
 
     return main_df
 
-##################### Plot Keltner channel on different time frames #####################
-
-def keltner_channel_plot(data, symbol, kc_lookback=20, multiplier=2, atr_lookback=10):
-
+def keltner_channel_plot(data,kc_lookback=20, multiplier=2, atr_lookback=10):
     """
     Function to implement Keltner Channel trading strategy and visualize signals on a plot.
 
@@ -244,272 +227,41 @@ def keltner_channel_plot(data, symbol, kc_lookback=20, multiplier=2, atr_lookbac
     and visualizes buy and sell signals on a Plotly plot.
     """
 
-    message = ""
-
+    # message = ""
     # Keltner Channel Calculation 5 minutes data
-    
-    # tr1_5m = pd.DataFrame(data['5m_High'] - data['5m_Low'])
-    # tr2_5m = pd.DataFrame(abs(data['5m_High'] - data['5m_Close'].shift()))
-    # tr3_5m = pd.DataFrame(abs(data[''] - data['5m_Close'].shift()))
-    # frames_5m = [tr1_5m, tr2_5m, tr3_5m]
-    # tr_5m = pd.concat(frames_5m, axis=1, join='inner').max(axis=1)
-    # atr_5m = tr_5m.ewm(alpha=1 / atr_lookback).mean()
-    # kc_middle_5m = data['5m_Close'].ewm(kc_loo5m_Lowkback).mean()
-    # kc_upper_5m = data['5m_Close'].ewm(kc_lookback).mean() + multiplier * atr_5m
-    # kc_lower_5m = data['5m_Close'].ewm(kc_lookback).mean() - multiplier * atr_5m
     data['5m_TR'] = np.maximum(data['5m_High'] - data['5m_Low'], np.maximum(abs(data['5m_High'] - data['5m_Close'].shift(1)), abs(data['5m_Low'] - data['5m_Close'].shift())))
     data['5m_ATR'] = data['5m_TR'].rolling(window=atr_lookback).mean()
     data['kc_middle_5m'] = data['5m_Close'].ewm(span=kc_lookback, adjust=False).mean()
     data['kc_upper_5m'] = data['kc_middle_5m'] + data['5m_ATR'] * multiplier
     data['kc_lower_5m'] = data['kc_middle_5m'] - data['5m_ATR'] * multiplier
-
     # Keltner Channel Strategy Implementation
     data['Upper_Signal_5m'] = np.where(data['5m_Close'] > data['kc_upper_5m'], 1, 0)
     data['Middle_Signal_5m'] = np.where(data['5m_Close'] < data['kc_middle_5m'], -1, 0)
     data['Lower_Signal_5m'] = np.where(data['5m_Close'] < data['kc_lower_5m'], -1, 0)
-    
-    # buy_price_5m = []
-    # sell_price_5m = []
-    # kc_signal_5m = []
-    # signal_5m = 0
-    # mid_buy_price_5m = []
-    # mid_sell_price_5m = []
-    # mid_kc_signal_5m = []
-    # mid_signal = 0
 
-
-    # for i in range(len(data) - 1):
-
-    #     if data['5m_Close'].iloc[i] > kc_middle_5m.iloc[i] and data['5m_Close'].iloc[i + 1] < data['5m_Close'].iloc[i]:
-    #         if mid_signal != 1:
-    #             mid_buy_price_5m.append(data['5m_Close'].iloc[i])
-    #             mid_sell_price_5m.append(np.nan)
-    #             mid_signal = 1
-    #             mid_kc_signal_5m.append(mid_signal)
-    #         else:
-    #             mid_buy_price_5m.append(np.nan)
-    #             mid_sell_price_5m.append(np.nan)
-    #             mid_kc_signal_5m.append(0)
-
-    #     elif data['5m_Close'].iloc[i] < kc_middle_5m.iloc[i] and data['5m_Close'].iloc[i + 1] > data['5m_Close'].iloc[i]:
-    #         if mid_signal != -1:
-    #             mid_buy_price_5m.append(np.nan)
-    #             mid_sell_price_5m.append(data['5m_Close'].iloc[i])
-    #             mid_signal = -1
-    #             mid_kc_signal_5m.append(mid_signal)
-    #         else:
-    #             mid_buy_price_5m.append(np.nan)
-    #             mid_sell_price_5m.append(np.nan)
-    #             mid_kc_signal_5m.append(0)
-
-    #     else:
-    #         mid_buy_price_5m.append(np.nan)
-    #         mid_sell_price_5m.append(np.nan)
-    #         mid_kc_signal_5m.append(0)
-
-    #     if data['5m_Close'].iloc[i] < kc_lower_5m.iloc[i] and data['5m_Close'].iloc[i + 1] > data['5m_Close'].iloc[i]:
-    #         if signal_5m != 1:
-    #             buy_price_5m.append(data['5m_Close'].iloc[i])
-    #             sell_price_5m.append(np.nan)
-    #             signal_5m = 1
-    #             kc_signal_5m.append(signal_5m)
-    #         else:
-    #             buy_price_5m.append(np.nan)
-    #             sell_price_5m.append(np.nan)
-    #             kc_signal_5m.append(0)
-    #     elif data['5m_Close'].iloc[i] > kc_upper_5m.iloc[i] and data['5m_Close'].iloc[i + 1] < data['5m_Close'].iloc[i]:
-    #         if signal_5m != -1:
-    #             buy_price_5m.append(np.nan)
-    #             sell_price_5m.append(data['5m_Close'].iloc[i])
-    #             signal_5m = -1
-    #             kc_signal_5m.append(signal_5m)
-    #         else:
-    #             buy_price_5m.append(np.nan)
-    #             sell_price_5m.append(np.nan)
-    #             kc_signal_5m.append(0)
-    #     else:
-    #         buy_price_5m.append(np.nan)
-    #         sell_price_5m.append(np.nan)
-    #         kc_signal_5m.append(0)
-
-
-    # Keltner Channel Calculation 15 minutes data
-
-    # tr1_15m = pd.DataFrame(data['15m_High'] - data['15m_Low'])
-    # tr2_15m = pd.DataFrame(abs(data['15m_High'] - data['15m_Close'].shift()))
-    # tr3_15m = pd.DataFrame(abs(data['15m_Low'] - data['15m_Close'].shift()))
-    # frames_15m = [tr1_15m, tr2_15m, tr3_15m]
-    # tr_15m = pd.concat(frames_15m, axis=1, join='inner').max(axis=1)
-    # atr_15m = tr_15m.ewm(alpha=1 / atr_lookback).mean()
-    # kc_middle_15m = data['15m_Close'].ewm(kc_lookback).mean()
-    # kc_upper_15m = data['15m_Close'].ewm(kc_lookback).mean() + multiplier * atr_15m
-    # kc_lower_15m = data['15m_Close'].ewm(kc_lookback).mean() - multiplier * atr_15m
+     # Keltner Channel Calculation 15 minutes data
     data['15m_TR'] = np.maximum(data['15m_High'] - data['15m_Low'], np.maximum(abs(data['15m_High'] - data['15m_Close'].shift(1)), abs(data['15m_Low'] - data['15m_Close'].shift())))
     data['15m_ATR'] = data['15m_TR'].rolling(window=atr_lookback).mean()
     data['kc_middle_15m'] = data['15m_Close'].ewm(span=kc_lookback, adjust=False).mean()
     data['kc_upper_15m'] = data['kc_middle_15m'] + data['15m_ATR'] * multiplier
     data['kc_lower_15m'] = data['kc_middle_15m'] - data['15m_ATR'] * multiplier
-
-
-    # Keltner Channel Strategy Implementation
-
+    # Keltner Channel Strategy Implementation    
     data['Upper_Signal_15m'] = np.where(data['15m_Close'] > data['kc_upper_15m'], 1, 0)
     data['Middle_Signal_15m'] = np.where(data['15m_Close'] < data['kc_middle_15m'], -1, 0)
     data['Lower_Signal_15m'] = np.where(data['5m_Close'] < data['kc_lower_15m'], -1, 0)
     
-    # buy_price_15m = []
-    # sell_price_15m = []
-    # kc_signal_15m = []
-    # signal_15m = 0
-    # mid_buy_price_15m = []
-    # mid_sell_price_15m = []
-    # mid_kc_signal_15m = []
-    # mid_signal = 0
-
-    # for i in range(len(data) - 1):
-
-    #     if data['15m_Close'].iloc[i] > kc_middle_15m.iloc[i] and data['15m_Close'].iloc[i + 1] < data['15m_Close'].iloc[i]:
-    #         if mid_signal != 1:
-    #             mid_buy_price_15m.append(data['15m_Close'].iloc[i])
-    #             mid_sell_price_15m.append(np.nan)
-    #             mid_signal = 1
-    #             mid_kc_signal_15m.append(mid_signal)
-    #         else:
-    #             mid_buy_price_15m.append(np.nan)
-    #             mid_sell_price_15m.append(np.nan)
-    #             mid_kc_signal_15m.append(0)
-
-    #     elif data['15m_Close'].iloc[i] < kc_middle_15m.iloc[i] and data['15m_Close'].iloc[i + 1] > data['15m_Close'].iloc[i]:
-    #         if mid_signal != -1:
-    #             mid_buy_price_15m.append(np.nan)
-    #             mid_sell_price_15m.append(data['15m_Close'].iloc[i])
-    #             mid_signal = -1
-    #             mid_kc_signal_15m.append(mid_signal)
-    #         else:
-    #             mid_buy_price_15m.append(np.nan)
-    #             mid_sell_price_15m.append(np.nan)
-    #             mid_kc_signal_15m.append(0)
-
-    #     else:
-    #         mid_buy_price_15m.append(np.nan)
-    #         mid_sell_price_15m.append(np.nan)
-    #         mid_kc_signal_15m.append(0)
-
-    #     if data['15m_Close'].iloc[i] < kc_lower_15m.iloc[i] and data['15m_Close'].iloc[i + 1] > data['15m_Close'].iloc[i]:
-    #         if signal_15m != 1:
-    #             buy_price_15m.append(data['15m_Close'].iloc[i])
-    #             sell_price_15m.append(np.nan)
-    #             signal_15m = 1
-    #             kc_signal_15m.append(signal_15m)
-    #         else:
-    #             buy_price_15m.append(np.nan)
-    #             sell_price_15m.append(np.nan)
-    #             kc_signal_15m.append(0)
-    #     elif data['15m_Close'].iloc[i] > kc_upper_15m.iloc[i] and data['15m_Close'].iloc[i + 1] < data['15m_Close'].iloc[i]:
-    #         if signal_15m != -1:
-    #             buy_price_15m.append(np.nan)
-    #             sell_price_15m.append(data['15m_Close'].iloc[i])
-    #             signal_15m = -1
-    #             kc_signal_15m.append(signal_15m)
-    #         else:
-    #             buy_price_15m.append(np.nan)
-    #             sell_price_15m.append(np.nan)
-    #             kc_signal_15m.append(0)
-    #     else:
-    #         buy_price_15m.append(np.nan)
-    #         sell_price_15m.append(np.nan)
-    #         kc_signal_15m.append(0)
-
     # Keltner Channel Calculation 60 minutes data
     data['60m_TR'] = np.maximum(data['60m_High'] - data['60m_Low'], np.maximum(abs(data['60m_High'] - data['60m_Close'].shift(1)), abs(data['60m_Low'] - data['60m_Close'].shift())))
     data['60m_ATR'] = data['60m_TR'].rolling(window=atr_lookback).mean()
     data['kc_middle_60m'] = data['60m_Close'].ewm(span=kc_lookback, adjust=False).mean()
     data['kc_upper_60m'] = data['kc_middle_60m'] + data['60m_ATR'] * multiplier
     data['kc_lower_60m'] = data['kc_middle_60m'] - data['60m_ATR'] * multiplier
-
-    # tr1_60m = pd.DataFrame(data['60m_High'] - data['60m_Low'])
-    # tr2_60m = pd.DataFrame(abs(data['60m_High'] - data['60m_Close'].shift()))
-    # tr3_60m = pd.DataFrame(abs(data['60m_Low'] - data['60m_Close'].shift()))
-    # frames_60m = [tr1_60m, tr2_60m, tr3_60m]
-    # tr_60m = pd.concat(frames_60m, axis=1, join='inner').max(axis=1)
-    # atr_60m = tr_60m.ewm(alpha=1 / atr_lookback).mean()
-    # kc_middle_60m = data['60m_Close'].ewm(kc_lookback).mean()
-    # kc_upper_60m = data['60m_Close'].ewm(kc_lookback).mean() + multiplier * atr_60m
-    # kc_lower_60m = data['60m_Close'].ewm(kc_lookback).mean() - multiplier * atr_60m
-
-    
     # Keltner Channel Strategy Implementation
-
     data['Upper_Signal_60m'] = np.where(data['60m_Close'] > data['kc_upper_60m'], 1, 0)
     data['Middle_Signal_60m'] = np.where(data['60m_Close'] < data['kc_middle_60m'], -1, 0)
     data['Lower_Signal_60m'] = np.where(data['60m_Close'] < data['kc_lower_60m'], -1, 0)
-    
-    # # Keltner Channel Strategy Implementation
-    # buy_price_60m = []
-    # sell_price_60m = []
-    # kc_signal_60m = []
-    # signal_60m = 0
-    # mid_buy_price_60m = []
-    # mid_sell_price_60m = []
-    # mid_kc_signal_60m = []
-    # mid_signal = 0
 
-
-    # for i in range(len(data) - 1):
-
-    #     if data['60m_Close'].iloc[i] > kc_middle_60m.iloc[i] and data['60m_Close'].iloc[i + 1] < data['60m_Close'].iloc[i]:
-    #         if mid_signal != 1:
-    #             mid_buy_price_60m.append(data['60m_Close'].iloc[i])
-    #             mid_sell_price_60m.append(np.nan)
-    #             mid_signal = 1
-    #             mid_kc_signal_60m.append(mid_signal)
-    #         else:
-    #             mid_buy_price_60m.append(np.nan)
-    #             mid_sell_price_60m.append(np.nan)
-    #             mid_kc_signal_60m.append(0)
-
-    #     elif data['60m_Close'].iloc[i] < kc_middle_60m.iloc[i] and data['60m_Close'].iloc[i + 1] > data['60m_Close'].iloc[i]:
-    #         if mid_signal != -1:
-    #             mid_buy_price_60m.append(np.nan)
-    #             mid_sell_price_60m.append(data['60m_Close'].iloc[i])
-    #             mid_signal = -1
-    #             mid_kc_signal_60m.append(mid_signal)
-    #         else:
-    #             mid_buy_price_60m.append(np.nan)
-    #             mid_sell_price_60m.append(np.nan)
-    #             mid_kc_signal_60m.append(0)
-
-    #     else:
-    #         mid_buy_price_60m.append(np.nan)
-    #         mid_sell_price_60m.append(np.nan)
-    #         mid_kc_signal_60m.append(0)
-
-    #     if data['60m_Close'].iloc[i] < kc_lower_60m.iloc[i] and data['60m_Close'].iloc[i + 1] > data['60m_Close'].iloc[i]:
-    #         if signal_60m != 1:
-    #             buy_price_60m.append(data['60m_Close'].iloc[i])
-    #             sell_price_60m.append(np.nan)
-    #             signal_60m = 1
-    #             kc_signal_60m.append(signal_60m)
-    #         else:
-    #             buy_price_60m.append(np.nan)
-    #             sell_price_60m.append(np.nan)
-    #             kc_signal_60m.append(0)
-    #     elif data['60m_Close'].iloc[i] > kc_upper_60m.iloc[i] and data['60m_Close'].iloc[i + 1] < data['60m_Close'].iloc[i]:
-    #         if signal_60m != -1:
-    #             buy_price_60m.append(np.nan)
-    #             sell_price_60m.append(data['60m_Close'].iloc[i])
-    #             signal_60m = -1
-    #             kc_signal_60m.append(signal_60m)
-    #         else:
-    #             buy_price_60m.append(np.nan)
-    #             sell_price_60m.append(np.nan)
-    #             kc_signal_60m.append(0)
-    #     else:
-    #         buy_price_60m.append(np.nan)
-    #         sell_price_60m.append(np.nan)
-    #         kc_signal_60m.append(0)
-
-    # Keltner Channel Calculation 60 minutes data
+    # Keltner Channel Calculation 1day data
     data['1d_TR'] = np.maximum(data['1d_High'] - data['1d_Low'], np.maximum(abs(data['1d_High'] - data['1d_Close'].shift(1)), abs(data['1d_Low'] - data['1d_Close'].shift())))
     data['1d_ATR'] = data['1d_TR'].rolling(window=kc_lookback).mean()
     data['kc_middle_1d'] = data['1d_Close'].ewm(span=kc_lookback, adjust=False).mean()
@@ -517,159 +269,21 @@ def keltner_channel_plot(data, symbol, kc_lookback=20, multiplier=2, atr_lookbac
     data['kc_lower_1d'] = data['kc_middle_1d'] - data['1d_ATR'] * multiplier
 
     # Keltner Channel Strategy Implementation
-
     data['Upper_Signal_1d'] = np.where(data['1d_Close'] > data['kc_upper_1d'], 1, 0)
     data['Middle_Signal_1d'] = np.where(data['1d_Close'] < data['kc_middle_1d'], -1, 0)
     data['Lower_Signal_1d'] = np.where(data['1d_Close'] < data['kc_lower_1d'], -1, 0)
+    data.to_csv('keltner_channel_data.csv')
+    return data
 
-    # tr1_1d = pd.DataFrame(data['1d_High'] - data['1d_Low'])
-    # tr2_1d = pd.DataFrame(abs(data['1d_High'] - data['1d_Close'].shift()))
-    # tr3_1d = pd.DataFrame(abs(data['1d_Low'] - data['1d_Close'].shift()))
-    # frames_1d = [tr1_1d, tr2_1d, tr3_1d]
-    # tr_1d = pd.concat(frames_1d, axis=1, join='inner').max(axis=1)
-    # atr_1d = tr_1d.ewm(alpha=1 / atr_lookback).mean()
-    # kc_middle_1d = data['1d_Close'].ewm(kc_lookback).mean()
-    # kc_upper_1d = data['1d_Close'].ewm(kc_lookback).mean() + multiplier * atr_1d
-    # kc_lower_1d = data['1d_Close'].ewm(kc_lookback).mean() - multiplier * atr_1d
+def keltner_channel_signal(data, symbol):
 
-    # Keltner Channel Strategy Implementation
-    # buy_price_1d = []
-    # sell_price_1d = []
-    # kc_signal_1d = []
-    # signal_1d = 0
-    # mid_buy_price_1d = []
-    # mid_sell_price_1d = []
-    # mid_kc_signal_1d = []
-    # mid_signal = 0
-
-
-    # for i in range(len(data) - 1):
-
-    #     if data['1d_Close'].iloc[i] > kc_middle_1d.iloc[i] and data['1d_Close'].iloc[i + 1] < data['1d_Close'].iloc[i]:
-    #         if mid_signal != 1:
-    #             mid_buy_price_1d.append(data['1d_Close'].iloc[i])
-    #             mid_sell_price_1d.append(np.nan)
-    #             mid_signal = 1
-    #             mid_kc_signal_1d.append(mid_signal)
-    #         else:
-    #             mid_buy_price_1d.append(np.nan)
-    #             mid_sell_price_1d.append(np.nan)
-    #             mid_kc_signal_1d.append(0)
-
-    #     elif data['1d_Close'].iloc[i] < kc_middle_1d.iloc[i] and data['1d_Close'].iloc[i + 1] > data['1d_Close'].iloc[i]:
-    #         if mid_signal != -1:
-    #             mid_buy_price_1d.append(np.nan)
-    #             mid_sell_price_1d.append(data['1d_Close'].iloc[i])
-    #             mid_signal = -1
-    #             mid_kc_signal_1d.append(mid_signal)
-    #         else:
-    #             mid_buy_price_1d.append(np.nan)
-    #             mid_sell_price_1d.append(np.nan)
-    #             mid_kc_signal_1d.append(0)
-
-    #     else:
-    #         mid_buy_price_1d.append(np.nan)
-    #         mid_sell_price_1d.append(np.nan)
-    #         mid_kc_signal_1d.append(0)
-
-    #     if data['1d_Close'].iloc[i] < kc_lower_1d.iloc[i] and data['1d_Close'].iloc[i + 1] > data['1d_Close'].iloc[i]:
-    #         if signal_1d != 1:
-    #             buy_price_1d.append(data['1d_Close'].iloc[i])
-    #             sell_price_1d.append(np.nan)
-    #             signal_1d = 1
-    #             kc_signal_1d.append(signal_1d)
-    #         else:
-    #             buy_price_1d.append(np.nan)
-    #             sell_price_1d.append(np.nan)
-    #             kc_signal_1d.append(0)
-    #     elif data['1d_Close'].iloc[i] > kc_upper_1d.iloc[i] and data['1d_Close'].iloc[i + 1] < data['1d_Close'].iloc[i]:
-    #         if signal_1d != -1:
-    #             buy_price_1d.append(np.nan)
-    #             sell_price_1d.append(data['1d_Close'].iloc[i])
-    #             signal_1d = -1
-    #             kc_signal_1d.append(signal_1d)
-    #         else:
-    #             buy_price_1d.append(np.nan)
-    #             sell_price_1d.append(np.nan)
-    #             kc_signal_1d.append(0)
-    #     else:
-    #         buy_price_1d.append(np.nan)
-    #         sell_price_1d.append(np.nan)
-    #         kc_signal_1d.append(0)
-
-# # Check if a new buy or sell signal is generated in 5min timeframe
-
-#     if (mid_kc_signal_5m[-1] == -1) & (mid_kc_signal_5m[-2] == 1):
-#         message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 5min timeframe"
-#         # send_whatsapp_messages("leads.csv", message)
-#         # send_email(message_text=message)
-
-#     elif (kc_signal_5m[-1] == -1) & (kc_signal_5m[-2] == 1):
-#         message = f"Sell Signal:\n {symbol} \nPrice crossed above Upper Keltner Channel in 5min timeframe"
-#         # send_whatsapp_messages("leads.csv", message)  # Adjust the filename accordingly
-#         # send_email(message_text=message)  # Send a detailed email
-    
-#     if (mid_kc_signal_5m[-1] == 1) & (mid_kc_signal_5m[-2] == -1):
-#         message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 5min timeframe"
-#         # send_whatsapp_messages("leads.csv", message)
-#         # send_email(message_text=message)
-
-#     elif (kc_signal_5m[-1] == 1) & (kc_signal_5m[-2] == -1):
-#         message = f"Buy Signal: \n{symbol} \n Price crossed below Lower Keltner Channel in 5min timeframe"
-#         # send_whatsapp_messages("leads.csv", message)  # Adjust the filename accordingly
-#         # send_email(message_text=message)  # Send a detailed email
-
-#     else:
-#         print("No Signal in 5min timeframe above Middle Keltner Channel or below Middle Keltner Channel")
-  
-    # Check if a new buy or sell signal is generated in 1day timeframe
+    message = ""
+     # Check if a new buy or sell signal is generated in 1day timeframe
     mid_kc_signal_1d = data['Middle_Signal_1d'].values
     mid_kc_signal_60m = data['Middle_Signal_60m'].values
     mid_kc_signal_15m = data['Middle_Signal_15m'].values
     mid_kc_signal_5m = data['Middle_Signal_5m'].values
-    
-    if (mid_kc_signal_1d[-1] == 1) & (mid_kc_signal_1d[-2] == -1) & (mid_kc_signal_60m[-1] == 1) & (mid_kc_signal_15m[-1] == 1) & (mid_kc_signal_5m[-1] == 1):
-        message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 1day timeframe and also followed by 60min, 15min and 5min timeframes as well"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
 
-    elif (mid_kc_signal_1d[-1] == 1) & (mid_kc_signal_1d[-2] == -1) & (mid_kc_signal_60m[-1] == 1) & (mid_kc_signal_15m[-1] == 1):
-        message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 1day timeframe and also followed by 60min and 15min timeframe as well"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-    elif (mid_kc_signal_1d[-1] == 1) & (mid_kc_signal_1d[-2] == -1) & (mid_kc_signal_60m[-1] == 1):
-        message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 1day timeframe and also followed by 60min timeframe as well"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-    elif (mid_kc_signal_1d[-1] == 1) & (mid_kc_signal_1d[-2] == -1):
-        message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 1day timeframe"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-    elif (mid_kc_signal_1d[-1] == -1) & (mid_kc_signal_1d[-2] == 1) & (mid_kc_signal_60m[-1] == -1) & (mid_kc_signal_15m[-1] == -1) & (mid_kc_signal_5m[-1] == -1):
-        message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 1day timeframe and also followed by 60min, 15min and 5min timeframes as well"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-    elif (mid_kc_signal_1d[-1] == -1) & (mid_kc_signal_1d[-2] == 1) & (mid_kc_signal_60m[-1] == -1) & (mid_kc_signal_15m[-1] == -1):
-        message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 1day timeframe and also followed by 60min and 15min timeframe as well"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-    elif (mid_kc_signal_1d[-1] == -1) & (mid_kc_signal_1d[-2] == 1) & (mid_kc_signal_60m[-1] == -1):
-        message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 1day timeframe and also followed by 60min timeframe as well"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-    elif (mid_kc_signal_1d[-1] == -1) & (mid_kc_signal_1d[-2] == 1):
-        message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 1day timeframe"
-        # send_whatsapp_messages("leads.csv", message)
-        # send_email(message_text=message)
-
-    else:
-        print("No Signal in 1day timeframe above Middle Keltner Channel or below Middle Keltner Channel")
     upper_kc_signal_1d = data['Upper_Signal_1d'].values
     upper_kc_signal_60m = data['Upper_Signal_60m'].values
     upper_kc_signal_15m = data['Upper_Signal_15m'].values
@@ -679,44 +293,89 @@ def keltner_channel_plot(data, symbol, kc_lookback=20, multiplier=2, atr_lookbac
     lower_kc_signal_60m = data['Lower_Signal_60m'].values
     lower_kc_signal_15m = data['Lower_Signal_15m'].values
     lower_kc_signal_5m = data['Lower_Signal_5m'].values
+   
+    if (mid_kc_signal_1d[-1] == -1) & (mid_kc_signal_1d[-2] == -1) & (mid_kc_signal_60m[-1] == 1) & (mid_kc_signal_15m[-1] == -1) & (mid_kc_signal_5m[-1] == -1):
+        message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 1day timeframe and also followed by 60min, 15min and 5min timeframes as well"
+        print("signal function called")
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif (mid_kc_signal_1d[-1] == -1) & (mid_kc_signal_1d[-2] == -1) & (mid_kc_signal_60m[-1] == -1) & (mid_kc_signal_15m[-1] == -1):
+        message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 1day timeframe and also followed by 60min and 15min timeframe as well"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif (mid_kc_signal_1d[-1] == -1) & (mid_kc_signal_1d[-2] == -1) & (mid_kc_signal_60m[-1] == -1):
+        message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 1day timeframe and also followed by 60min timeframe as well"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif (mid_kc_signal_1d[-1] == -1) & (mid_kc_signal_1d[-2] == -1):
+        message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 1day timeframe"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif (mid_kc_signal_1d[-1] == -1) & (mid_kc_signal_1d[-2] == -1) & (mid_kc_signal_60m[-1] == -1) & (mid_kc_signal_15m[-1] == -1) & (mid_kc_signal_5m[-1] == -1):
+        message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 1day timeframe and also followed by 60min, 15min and 5min timeframes as well"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif (mid_kc_signal_1d[-1] == -1) & (mid_kc_signal_1d[-2] == -1) & (mid_kc_signal_60m[-1] == -1) & (mid_kc_signal_15m[-1] == -1):
+        message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 1day timeframe and also followed by 60min and 15min timeframe as well"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif (mid_kc_signal_1d[-1] == -1) & (mid_kc_signal_1d[-2] == -1) & (mid_kc_signal_60m[-1] == -1):
+        message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 1day timeframe and also followed by 60min timeframe as well"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif (mid_kc_signal_1d[-1] == -1) & (mid_kc_signal_1d[-2] == -1):
+        message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 1day timeframe"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    else:
+        print("No Signal in 1day timeframe above Middle Keltner Channel or below Middle Keltner Channel")
+    
 
 
-    if (lower_kc_signal_1d[-1] == 1) & (lower_kc_signal_1d[-2] == -1) & (lower_kc_signal_60m[-1] == 1) & (lower_kc_signal_15m[-1] == 1) & (lower_kc_signal_5m[-1] == 1):
+    if (lower_kc_signal_1d[-1] == -1) & (lower_kc_signal_1d[-2] == -1) & (lower_kc_signal_60m[-1] == -1) & (lower_kc_signal_15m[-1] == -1) & (lower_kc_signal_5m[-1] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Lower Keltner Channel in 1day timeframe and also followed by 60min, 15min and 5min timeframes as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (lower_kc_signal_1d[-1] == 1) & (lower_kc_signal_1d[-2] == -1) & (lower_kc_signal_60m[-1] == 1) & (lower_kc_signal_15m[-1] == 1):
+    elif (lower_kc_signal_1d[-1] == -1) & (lower_kc_signal_1d[-2] == -1) & (lower_kc_signal_60m[-1] == -1) & (lower_kc_signal_15m[-1] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Lower Keltner Channel in 1day timeframe and also followed by 60min and 15min timeframe as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (lower_kc_signal_1d[-1] == 1) & (lower_kc_signal_1d[-2] == -1) & (lower_kc_signal_60m[-1] == 1):
+    elif (lower_kc_signal_1d[-1] == -1) & (lower_kc_signal_1d[-2] == -1) & (lower_kc_signal_60m[-1] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Lower Keltner Channel in 1day timeframe and also followed by 60min timeframe as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (lower_kc_signal_1d[-1] == 1) & (lower_kc_signal_1d[-2] == -1):
+    elif (lower_kc_signal_1d[-1] == -1) & (lower_kc_signal_1d[-2] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Lower Keltner Channel in 1day timeframe"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (upper_kc_signal_1d[-1] == -1) & (upper_kc_signal_1d[-2] == 1) & (upper_kc_signal_60m[-1] == -1) & (upper_kc_signal_15m[-1] == -1) & (upper_kc_signal_5m[-1] == -1):
+    elif (upper_kc_signal_1d[-1] == 1) & (upper_kc_signal_1d[-2] == 1) & (upper_kc_signal_60m[-1] == 1) & (upper_kc_signal_15m[-1] == 1) & (upper_kc_signal_5m[-1] == 1):
         message = f"Sell Signal:\n {symbol} \nPrice crossed above Upper Keltner Channel in 1day timeframe and also followed by 60min, 15min and 5min timeframes as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (upper_kc_signal_1d[-1] == -1) & (upper_kc_signal_1d[-2] == 1) & (upper_kc_signal_60m[-1] == -1) & (upper_kc_signal_15m[-1] == -1):
+    elif (upper_kc_signal_1d[-1] == 1) & (upper_kc_signal_1d[-2] == 1) & (upper_kc_signal_60m[-1] == 1) & (upper_kc_signal_15m[-1] == 1):
         message = f"Sell Signal:\n {symbol} \nPrice crossed above Upper Keltner Channel in 1day timeframe and also followed by 60min and 15min timeframe as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (upper_kc_signal_1d[-1] == -1) & (upper_kc_signal_1d[-2] == 1) & (upper_kc_signal_60m[-1] == -1):
+    elif (upper_kc_signal_1d[-1] == 1) & (upper_kc_signal_1d[-2] == 1) & (upper_kc_signal_60m[-1] == 1):
         message = f"Sell Signal:\n {symbol} \nPrice crossed above Upper Keltner Channel in 1day timeframe and also followed by 60min timeframe as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
     
-    elif (upper_kc_signal_1d[-1] == -1) & (upper_kc_signal_1d[-2] == 1):
+    elif (upper_kc_signal_1d[-1] == 1) & (upper_kc_signal_1d[-2] == 1):
         message = f"Sell Signal:\n {symbol} \nPrice crossed above Upper Keltner Channel in 1day timeframe"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
@@ -727,28 +386,27 @@ def keltner_channel_plot(data, symbol, kc_lookback=20, multiplier=2, atr_lookbac
 
     
     # Check if a new buy or sell signal is generated in 60min timeframe
-        
-    if (mid_kc_signal_60m[-1] == 1) & (mid_kc_signal_60m[-2] == -1) & (mid_kc_signal_15m[-1] == 1) & (mid_kc_signal_5m[-1] == 1):
+    if (mid_kc_signal_60m[-1] == -1) & (mid_kc_signal_60m[-2] == -1) & (mid_kc_signal_15m[-1] == -1) & (mid_kc_signal_5m[-1] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 60min timeframe and also followed by 15min and 5min timeframes as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (mid_kc_signal_60m[-1] == 1) & (mid_kc_signal_60m[-2] == -1) & (mid_kc_signal_15m[-1] == 1):
+    elif (mid_kc_signal_60m[-1] == 1) & (mid_kc_signal_60m[-2] == -1) & (mid_kc_signal_15m[-1] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 60min timeframe and also followed by 15min timeframe as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (mid_kc_signal_60m[-1] == 1) & (mid_kc_signal_60m[-2] == -1):
+    elif (mid_kc_signal_60m[-1] == -1) & (mid_kc_signal_60m[-2] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 60min timeframe"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (mid_kc_signal_60m[-1] == -1) & (mid_kc_signal_60m[-2] == 1) & (mid_kc_signal_15m[-1] == -1) & (mid_kc_signal_5m[-1] == -1):
+    elif (mid_kc_signal_60m[-1] == -1) & (mid_kc_signal_60m[-2] == -1) & (mid_kc_signal_15m[-1] == -1) & (mid_kc_signal_5m[-1] == -1):
         message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 60min timeframe and also followed by 15min and 5min timeframes as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (mid_kc_signal_60m[-1] == -1) & (mid_kc_signal_60m[-2] == 1) & (mid_kc_signal_15m[-1] == -1):
+    elif (mid_kc_signal_60m[-1] == -1) & (mid_kc_signal_60m[-2] == -1) & (mid_kc_signal_15m[-1] == -1):
         message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 60min timeframe and also followed by 15min timeframe as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
@@ -761,32 +419,32 @@ def keltner_channel_plot(data, symbol, kc_lookback=20, multiplier=2, atr_lookbac
     else:
         print("No Signal in 60min timeframe above Middle Keltner Channel or below Middle Keltner Channel")
     
-    if (lower_kc_signal_60m[-1] == 1) & (lower_kc_signal_60m[-2] == -1) & (lower_kc_signal_15m[-1] == 1) & (lower_kc_signal_5m[-1] == 1):
+    if (lower_kc_signal_60m[-1] == -1) & (lower_kc_signal_60m[-2] == -1) & (lower_kc_signal_15m[-1] == -1) & (lower_kc_signal_5m[-1] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Lower Keltner Channel in 60min timeframe and also followed by 15min and 5min timeframes as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (lower_kc_signal_60m[-1] == 1) & (lower_kc_signal_60m[-2] == -1) & (lower_kc_signal_15m[-1] == 1):
+    elif (lower_kc_signal_60m[-1] == -1) & (lower_kc_signal_60m[-2] == -1) & (lower_kc_signal_15m[-1] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Lower Keltner Channel in 60min timeframe and also followed by 15min timeframe as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (lower_kc_signal_60m[-1] == 1) & (lower_kc_signal_60m[-2] == -1):
+    elif (lower_kc_signal_60m[-1] == -1) & (lower_kc_signal_60m[-2] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Lower Keltner Channel in 60min timeframe"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (upper_kc_signal_60m[-1] == -1) & (upper_kc_signal_60m[-2] == 1) & (upper_kc_signal_15m[-1] == -1) & (upper_kc_signal_5m[-1] == -1):
+    elif (upper_kc_signal_60m[-1] == 1) & (upper_kc_signal_60m[-2] == 1) & (upper_kc_signal_15m[-1] == 1) & (upper_kc_signal_5m[-1] == 1):
         message = f"Sell Signal:\n {symbol} \nPrice crossed above Upper Keltner Channel in 60min timeframe and also followed by 15min and 5min timeframes as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (upper_kc_signal_60m[-1] == -1) & (upper_kc_signal_60m[-2] == 1) & (upper_kc_signal_15m[-1] == -1):
+    elif (upper_kc_signal_60m[-1] == 1) & (upper_kc_signal_60m[-2] == 1) & (upper_kc_signal_15m[-1] == 1):
         message = f"Sell Signal:\n {symbol} \nPrice crossed above Upper Keltner Channel in 60min timeframe and also followed by 15min timeframe as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (upper_kc_signal_60m[-1] == -1) & (upper_kc_signal_60m[-2] == 1):
+    elif (upper_kc_signal_60m[-1] == 1) & (upper_kc_signal_60m[-2] == 1):
         message = f"Sell Signal:\n {symbol} \nPrice crossed above Upper Keltner Channel in 60min timeframe"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
@@ -797,13 +455,12 @@ def keltner_channel_plot(data, symbol, kc_lookback=20, multiplier=2, atr_lookbac
 
 
     # Check if a new buy or sell signal is generated in 15min timeframe
-
-    if (mid_kc_signal_15m[-1] == 1) & (mid_kc_signal_15m[-2] == -1) & (mid_kc_signal_5m[-1] == 1):
+    if (mid_kc_signal_15m[-1] == -1) & (mid_kc_signal_15m[-2] == -1) & (mid_kc_signal_5m[-1] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 15min timeframe and also followed by 5min timeframe as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
     
-    elif (mid_kc_signal_15m[-1] == 1) & (mid_kc_signal_15m[-2] == -1):
+    elif (mid_kc_signal_15m[-1] == -1) & (mid_kc_signal_15m[-2] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Middle Keltner Channel in 15min timeframe"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
@@ -813,7 +470,7 @@ def keltner_channel_plot(data, symbol, kc_lookback=20, multiplier=2, atr_lookbac
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (mid_kc_signal_15m[-1] == -1) & (mid_kc_signal_15m[-2] == 1):
+    elif (mid_kc_signal_15m[-1] == -1) & (mid_kc_signal_15m[-2] == -1):
         message = f"Sell Signal:\n {symbol} \nPrice crossed above Middle Keltner Channel in 15min timeframe"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
@@ -821,34 +478,30 @@ def keltner_channel_plot(data, symbol, kc_lookback=20, multiplier=2, atr_lookbac
     else:
         print("No Signal in 15min timeframe above Middle Keltner Channel or below Middle Keltner Channel")
     
-    if (lower_kc_signal_15m[-1] == 1) & (lower_kc_signal_15m[-2] == -1) & (lower_kc_signal_5m[-1] == 1):
+    if (lower_kc_signal_15m[-1] == -1) & (lower_kc_signal_15m[-2] == -1) & (lower_kc_signal_5m[-1] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Lower Keltner Channel in 15min timeframe and also followed by 5min timeframe as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (lower_kc_signal_15m[-1] == 1) & (lower_kc_signal_15m[-2] == -1):
+    elif (lower_kc_signal_15m[-1] == -1) & (lower_kc_signal_15m[-2] == -1):
         message = f"Buy Signal: \n{symbol} \n Price crossed below Lower Keltner Channel in 15min timeframe"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (upper_kc_signal_15m[-1] == -1) & (upper_kc_signal_15m[-2] == 1) & (upper_kc_signal_5m[-1] == -1):
+    elif (upper_kc_signal_15m[-1] == 1) & (upper_kc_signal_15m[-2] == 1) & (upper_kc_signal_5m[-1] == 1):
         message = f"Sell Signal:\n {symbol} \nPrice crossed above Upper Keltner Channel in 15min timeframe and also followed by 5min timeframe as well"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
-    elif (upper_kc_signal_15m[-1] == -1) & (upper_kc_signal_15m[-2] == 1):
+    elif (upper_kc_signal_15m[-1] == 1) & (upper_kc_signal_15m[-2] == 1):
         message = f"Sell Signal:\n {symbol} \nPrice crossed above Upper Keltner Channel in 15min timeframe"
         # send_whatsapp_messages("leads.csv", message)
         # send_email(message_text=message)
 
     else:
         print("No Signal in 15min timeframe above Upper Keltner Channel or below Lower Keltner Channel")
-     
-    # # Display the figure
-    # clear_output(wait=True)
-    # display(fig)
-
-    return message   #, fig
+    
+    return message
 
 def get_previous_working_day(df):
     # Fetch the latest date from the database
@@ -865,46 +518,33 @@ def get_previous_working_day(df):
     date_to_fetch = str(previous_date.strftime('%Y-%m-%d'))
 
     return date_to_fetch
-
 # Function to track time taken
 def track_time(stock_symbol, start_time):
     end_time = time.time()
     total_time = end_time - start_time
     return {'Stock': stock_symbol, 'Start Time': start_time, 'End Time': end_time, 'Total Time': total_time}
 
-# Initialize empty list to store time tracking data
-# time_tracking_data = []
-
-# # Define an infinite loop to continuously fetch minute-level stock data and plot EMAs
-# while True:
-
-# stocks_unsorted = ['acc', 'acl', 'adanient', 'adaniports', 'adanipower', 'alkem', '^NSEI', 'axisbank', 'bajaj-auto', 'bajajfinsv', 'bajfinance', 'biocon', 'boschltd', 'bpcl', 'britannia', 'canbk', 'cgpower', 'cholafin', 'cipla', 'coalindia', 'coforge', 'colpal', 'ltim', 'ltts', 'lupin', 'm&m', 'prestige', 'sbicard', 'sbilife', 'sbin', 'shreecem', 'muthootfin', 'titan', 'torntpharm', 'abb', 'industower', 'voltas', 'bhartiartl', 'bhel', 'pnb', 'policybzr', 'abfrl', 'polycab', 'shriramfin', 'siemens', 'sonacoms', 'srf', 'sunpharma', 'suntv', 'syngene', 'tatachem', 'tatacomm', 'tataconsum', 'tataelxsi', 'tatamotors', 'tatamtrdvr', 'itc', 'jindalstel', 'ramcocem', 'recltd', 'infy', 'ioc', 'tatapower', 'tatasteel', 'ipcalab', 'irctc', '^NSEBANK', 'YESBANK', 'ZYDUSLIFE', 'balkrisind', 'bankbaroda', 'bataindia', 'bdl', 'bel', 'bergepaint', 'bharatforg', 'concor', 'coromandel', 'crompton', 'cumminsind', 'reliance', 'sail', 'dalbharat', 'deepakntr', 'msumi', 'powergrid', 'epigral', 'escorts', 'fact', 'fluorochem', 'gail', 'gland', 'delhivery', 'divislab', 'dixon', 'dlf', 'drreddy', 'eichermot', 'm&mfin', 'mankind', 'marico', 'maruti', 'maxhealth', 'mazdock', 'mcdowell-n', 'mfsl', 'motherson', 'jswenergy', 'jswsteel', 'jublfood', 'kotakbank', 'ambujacem', 'aplapollo', 'naukri', 'mphasis', 'godrejprop', 'dabur', 'grasim', 'gujgasltd', 'hal', 'havells', 'kpittech', 'l&tfh', 'latentview', 'lauruslabs', 'lichsgfin', 'lici', 'hcltech', 'hdfcamc', 'hdfcbank', 'hdfclife', 'irfc', 'ubl', 'ultracemco', 'unionbank', 'upl', 'vbl', 'vedl', 'godrejcp', 'wipro', 'pel', 'trent', 'tvsmotor', 'aartiind', 'persistent', 'petronet', 'pfc', 'pghh', 'pidilitind', 'piind', 'tcs', 'techm', 'tiindia', 'navinfluor', 'nestleind', 'nhpc', 'nmdc', 'ntpc', 'nykaa', 'oberoirlty', 'oil', 'ongc', 'pageind', 'patanjali', 'heromotoco', 'hindalco', 'hindpetro', 'hindunilvr', 'icicibank', 'icicigi', 'icicipruli', 'idfcfirstb', 'igl', 'indhotel', 'indigo', 'indusindbk', 'apollohosp', 'apollotyre', 'asianpaint', 'lodha', 'lt', 'astral', 'aubank', 'auropharma', 'abcapital']
-# Reflect the database tables
 metadata = MetaData()
 metadata.reflect(bind=engine)
 
 stocks_unsorted = metadata.tables.keys()
-
 stocks = sorted(stocks_unsorted)[::3]
 print(f'\n{stocks}\n')
 
 while True:
-
     time_tracking_data = []
-
     combine_msgs = []
 
     for stock_symbol in stocks:
 
         start_time = time.time()
-
         print(stock_symbol)
 
         sql_df = pd.read_sql_table(stock_symbol, engine)
 
         # check if the dataframe is empty
-        if  sql_df.empty:
-            continue
+        # if  sql_df.empty:
+        #     continue
 
         date_to_fetch_from = get_previous_working_day(sql_df)
 
@@ -914,9 +554,9 @@ while True:
         index_list = sql_df.index[sql_df['Date'] == date_to_fetch_from].tolist()
 
         #check index_list is empty or not   
-        if not index_list:
-            continue
-        
+        # if not index_list:
+        #     continue
+        print(index_list)
         for idx in range(index_list[-1] + 1, sql_df.shape[0]):
             sql_df.drop(idx, inplace=True)
 
@@ -938,12 +578,14 @@ while True:
         final_df.drop_duplicates(subset=['5m_Open','5m_High','5m_Low','5m_Close','5m_Volume'], keep='last', inplace=True)
         final_df = final_df.dropna(subset=['5m_Open','5m_High','5m_Low','5m_Close'])
         final_df.fillna(method='ffill', inplace=True)
-        # print(final_df.tail(10))
+        print(final_df.tail(10))
 
         # print(final_df.tail(10))
         # final_df.to_csv(f'{stock_symbol}_data.csv')
 
-        msg = keltner_channel_plot(data=final_df, kc_lookback=10, multiplier=1, atr_lookback=10, symbol= stock_symbol.upper())
+        data = keltner_channel_plot(data=final_df, kc_lookback=10, multiplier=1, atr_lookback=10)
+        msg= keltner_channel_signal(data, stock_symbol.upper())
+        #msg = keltner_channel_plot(data=final_df, kc_lookback=10, multiplier=1, atr_lookback=10, symbol= stock_symbol.upper())
 
         print(msg)
 
@@ -952,7 +594,6 @@ while True:
 
         # Track time for this stock
         time_tracking_data.append(track_time(stock_symbol, start_time))
-
         time.sleep(1)
 
     update = [word.replace('&', 'and') for word in combine_msgs]
@@ -960,7 +601,10 @@ while True:
     formatted_alerts = [alert + ' ' for alert in update]
 
     combine_msg = '\n\n'.join(formatted_alerts)
-
+    print("=======================",combine_msg,"====================")
+    f1= open("keltner_channel_alerts.txt","w+")
+    f1.write(combine_msg)
+    f1.close()
     send_whatsapp_messages("leads.csv", combine_msg)
 
     # Convert time tracking data to DataFrame
@@ -979,7 +623,7 @@ while True:
     time_df.to_csv(f'KELTNER_stock_time_sheet{latest_time_with_date}.csv')
 
     # Sleep for 1 minute before running the loop again
-    time.sleep(900)
+    #time.sleep(900)
 
 # Sleep for 1 minute before running the loop again                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              to avoid overwhelming the system and the API
 # time.sleep(20)

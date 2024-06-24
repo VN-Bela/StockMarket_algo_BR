@@ -158,7 +158,7 @@ for table_name in table_names_list:
         # Delete the existing table
         table_to_delete = Table(table_name, metadata)
         table_to_delete.drop(engine)
-
+        
         final_df.to_sql(table_name, engine, if_exists='replace', index=False)
         # after_df.to_csv(f'{table_name}.csv')
         print(f"\nTable {table_name} updated successfully\n")

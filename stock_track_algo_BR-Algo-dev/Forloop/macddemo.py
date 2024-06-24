@@ -17,7 +17,6 @@ import pyautogui  # Library for GUI automation
 from sqlalchemy import create_engine, Table, MetaData  # Library for SQL operations
 from requests.exceptions import ReadTimeout
 from plotly.subplots import make_subplots
-
 user_name = "postgres"
 user_password = "manager"
 host = "localhost"
@@ -166,28 +165,6 @@ def send_whatsapp_messages(numbers_filename, message_text):
 # Initialize figure
 fig = go.Figure()
 
-# Calculate MACD and Signal line
-def calculate_macd(data, short_window=34, large_window=81, signal_window=9):
-    data['EMA_short'] = data['5m_Close'].ewm(span=short_window, adjust=False).mean()
-    data['EMA_large'] = data['5m_Close'].ewm(span=large_window, adjust=False).mean()
-    data['MACD'] = data['EMA_short'] - data['EMA_large']
-    data['Signal_Line'] = data['MACD'].ewm(span=signal_window, adjust=False).mean()
-    return data
-
-# Identify signals
-def identify_signals(data):
-    message=""
-    data['Crossover'] = data['MACD'] - data['Signal_Line']
-    data['Signal'] = 0
-    data.loc[data['Crossover'] > 0, 'Signal'] = 1
-    data.loc[data['Crossover'] < 0, 'Signal'] = -1
-    
-    # if data['Signal'].iloc[-1] == 1 and data['Signal'].iloc[-2] == -1:
-    #     message= f"Buy Signal on {data.index[-1].date()} at price {data['Close'].iloc[-1]}"
-    # elif data['Signal'].iloc[-1] == -1 and data['Signal'].iloc[-2] == 1:
-    #     message= f"Sell Signal on {data.index[-1].date()} at price {data['Close'].iloc[-1]}"
-
-    return message
 def initial_fetch_data(symbol, date):
     date = datetime.strptime(date, '%Y-%m-%d')
 
@@ -254,6 +231,149 @@ def track_time(stock_symbol, start_time):
     total_time = end_time - start_time
     return {'Stock': stock_symbol, 'Start Time': start_time, 'End Time': end_time, 'Total Time': total_time}
 
+# Calculate MACD and Signal line
+def calculate_macd(data, short_window=34, large_window=81, signal_window=9):
+    
+    # 5 minute MACD
+    data['5m_EMA_short'] = data['5m_Close'].ewm(span=short_window, adjust=False).mean()
+    data['5m_EMA_large'] = data['5m_Close'].ewm(span=large_window, adjust=False).mean()
+    data['5m_MACD'] = data['5m_EMA_short'] - data['5m_EMA_large']
+    data['5m_Signal_Line'] = data['5m_MACD'].ewm(span=signal_window, adjust=False).mean()
+    
+    data['5m_Crossover'] = data['5m_MACD'] - data['5m_Signal_Line']
+    data['5m_Signal'] = 0
+    data.loc[data['5m_Crossover'] > 0, '5m_Signal'] = 1
+    data.loc[data['5m_Crossover'] < 0, '5m_Signal'] = -1
+    
+    # 15 minute MACD
+    data['15m_EMA_short'] = data['15m_Close'].ewm(span=short_window, adjust=False).mean()
+    data['15m_EMA_large'] = data['15m_Close'].ewm(span=large_window, adjust=False).mean()
+    data['15m_MACD'] = data['15m_EMA_short'] - data['15m_EMA_large']
+    data['15m_Signal_Line'] = data['15m_MACD'].ewm(span=signal_window, adjust=False).mean()
+    
+    data["15m_Crossover"] = data["15m_MACD"] - data["15m_Signal_Line"]
+    data['15m_Signal'] = 0
+    data.loc[data['15m_Crossover'] > 0, '15m_Signal'] = 1
+    data.loc[data['15m_Crossover'] < 0, '15m_Signal'] = -1
+
+    # 60 minute MACD
+    data['60m_EMA_short'] = data['60m_Close'].ewm(span=short_window, adjust=False).mean()
+    data['60m_EMA_large'] = data['60m_Close'].ewm(span=large_window, adjust=False).mean()
+    data['60m_MACD'] = data['60m_EMA_short'] - data['60m_EMA_large']
+    data['60m_Signal_Line'] = data['60m_MACD'].ewm(span=signal_window, adjust=False).mean()
+
+    data["60m_Crossover"] = data["60m_MACD"] - data["60m_Signal_Line"]
+    data['60m_Signal'] = 0
+    data.loc[data['60m_Crossover'] > 0, '60m_Signal'] = 1
+    data.loc[data['60m_Crossover'] < 0, '60m_Signal'] = -1
+
+    # Daily MACD
+    data['1d_EMA_short'] = data['1d_Close'].ewm(span=short_window, adjust=False).mean()
+    data['1d_EMA_large'] = data['1d_Close'].ewm(span=large_window, adjust=False).mean()
+    data['1d_MACD'] = data['1d_EMA_short'] - data['1d_EMA_large']
+    data['1d_Signal_Line'] = data['1d_MACD'].ewm(span=signal_window, adjust=False).mean()
+
+    data["1d_Crossover"] = data["1d_MACD"] - data["1d_Signal_Line"]
+    data['1d_Signal'] = 0
+    data.loc[data['1d_Crossover'] > 0, '1d_Signal'] = 1
+    data.loc[data['1d_Crossover'] < 0, '1d_Signal'] = -1
+    return data
+
+def macd_crossover_signal(data,symbol):
+    
+    signal_1d = data['1d_Signal'].values
+    signal_60m = data['60m_Signal'].values
+    signal_15m = data['15m_Signal'].values
+    signal_5m=data['5m_Signal'].values
+    
+    message=""
+    
+    if ((data['1d_Signal'].iloc[-1] == 0) & (data['1d_Signal'].iloc[-2] == 1) & (data['60m_Signal'].iloc[-1] == 0) & (data['15m_Signal'].iloc[-1] == 0)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to below signal line in 1 day time interval and is continued from 60 minutes and 15 minutes time frame as well"
+        print("======redy=======")
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif ((data['1d_Signal'].iloc[-1] == 0) & (data['1d_Signal'].iloc[-2] == 1) & (data['60m_Signal'].iloc[-1] == 0)):
+        message = f"MACD Crossover Alert: \n{symbol} \n Cross Below Signal Line in 1 day time interval and is continued from 60 minutes time frame as well"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif ((data['1d_Signal'].iloc[-1] == 0) & (data['1d_Signal'].iloc[-2] == 1)):
+        message = f"MACD Crossover Alert: \n{symbol} \n Cross Below Signal Line in 1 day time interval"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+
+    elif ((data['1d_Signal'].iloc[-1] == 1) & (data['1d_Signal'].iloc[-2] == 0) & (data['60m_Signal'].iloc[-1] == 1) & (data['15m_Signal'].iloc[-1] == 1)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to above signal line in 1 day time interval and is continued from 60 minutes and 15 minutes time frame as well"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif ((data['1d_Signal'].iloc[-1] == 1) & (data['1d_Signal'].iloc[-2] == 0) & (data['60m_Signal'].iloc[-1] == 1)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to above signal line in 1 day time interval and is continued from 60 minutes time frame as well"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif ((data['1d_Signal'].iloc[-1] == 1) & (data['1d_Signal'].iloc[-2] == 0)):
+        message = f"MACD Crossover Alert: \n{symbol} \n Cross Above Signal Line in 1 day time interval"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    else:
+        print("No significant crossover detected in 1 day time interval!")
+        
+    if ((data['60m_Signal'].iloc[-1] == 0) & (data['60m_Signal'].iloc[-2] == 1) & (data['15m_Signal'].iloc[-1] == 0)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to below signal line in 60m time interval and is continued from 15 minutes time frame as well"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif ((data['60m_Signal'].iloc[-1] == 0) & (data['60m_Signal'].iloc[-2] == 1)):
+        message = f"MACD Crossover Alert: \n{symbol} \n Cross Below Signal Line in 60m time interval"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+
+    elif ((data['60m_Signal'].iloc[-1] == 1) & (data['60m_Signal'].iloc[-2] == 0) & (data['15m_Signal'].iloc[-1] == 1)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to above signal line in 60m time interval and is continued from 15 minutes time frame as well"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif ((data['60m_Signal'].iloc[-1] == 1) & (data['60m_Signal'].iloc[-2] == 0)):
+        message = f"MACD Crossover Alert: \n{symbol} \n Cross Above Signal Line in 60m time interval"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    else:
+        print("No significant crossover detected in 60m time interval!")
+
+
+    if ((data['15m_Signal'].iloc[-1] == 0) & (data['15m_Signal'].iloc[-2] == 1) & (data['5m_Signal'].iloc[-1] == 0)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to below signal line in 15 minutes time inetrval and is continued from 5 minutes time frame as well"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif ((data['15m_Signal'].iloc[-1] == 0) & (data['15m_Signal'].iloc[-2] == 1)):
+        message = f"MACD Crossover Alert: \n{symbol} \n Cross Below Signal Line in 15m time interval"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+
+    elif ((data['15m_Signal'].iloc[-1] == 1) & (data['15m_Signal'].iloc[-2] == 0) & (data['5m_Signal'].iloc[-1] == 1)):
+        message = f"MACD Crossover Alert: \n{symbol} \n The Cross over to above signal line in 15 minutes time inetrval and is continued from 5 minutes time frame as well"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    elif ((data['15m_Signal'].iloc[-1] == 1) & (data['15m_Signal'].iloc[-2] == 0)):
+        message = f"MACD Crossover Alert: \n{symbol} \n Cross Above Signal Line in 15m time interval"
+        # send_whatsapp_messages("leads.csv", message)
+        # send_email(message_text=message)
+
+    else:
+        print("No significant crossover detected in 15m time interval!")
+    return message
+
+
 # Reflect the database tables
 metadata = MetaData()
 metadata.reflect(bind=engine)
@@ -270,18 +390,13 @@ while True:
     for stock_symbol in stocks:
 
         start_time = time.time()
-
         print(stock_symbol)
-
         sql_df = pd.read_sql_table(stock_symbol, engine)
-
         date_to_fetch_from = get_previous_working_day(sql_df)
-
         sql_df['Date'] = sql_df['Date'].astype(str)
         
         # find the list of index number which hase the value in the date column as the date_to_fetch
         index_list = sql_df.index[sql_df['Date'] == date_to_fetch_from].tolist()
-
         for idx in range(index_list[-1] + 1, sql_df.shape[0]):
             sql_df.drop(idx,inplace=True)
 
@@ -297,7 +412,6 @@ while True:
 
         latest_df.reset_index(inplace=True)
         print(latest_df.tail())
-
         final_df = pd.concat([sql_df, latest_df], axis=0)
         final_df.reset_index(drop=True, inplace=True)
         final_df.drop_duplicates(subset=['5m_Open','5m_High','5m_Low','5m_Close','5m_Volume'], keep='last', inplace=True)
@@ -307,10 +421,11 @@ while True:
 
         # Call the MACD_plot function to plot Exponential Moving Averages (EMAs) on the downloaded data
         # Note: 'fig' is likely a pre-existing figure object used for plotting
-        data = calculate_macd(data=final_df,short_window=34, large_window=81,signal_window=9)
-        msg = calculate_macd(data)
+        
+        data =  calculate_macd(data=final_df,short_window=34, large_window=81,signal_window=9)
+        msg  =  macd_crossover_signal(data,stock_symbol.upper())
         print(msg)
-        if not msg.empty:
+        if msg:
             combine_msgs.append(msg.to_string())
 
         # Track time for this stock
