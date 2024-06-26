@@ -130,7 +130,6 @@ for table_name in table_names_list:
         # print the last row datetime value of the proper_df
         null_values_df = df[df['Datetime'] >= date_value]
 
-
         datetime_value = df.loc[null_values_df.index[0], 'Datetime']
 
         date_value = datetime_value.strftime('%Y-%m-%d %H:%M:%S')

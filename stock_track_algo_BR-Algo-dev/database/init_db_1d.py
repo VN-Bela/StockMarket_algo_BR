@@ -136,7 +136,7 @@ before_2m_date = (datetime.now() - timedelta(days=55)).strftime("%Y-%m-%d")
 print(f"*********************************\n{before_2m_date}\n*********************************")
 
 for symbols in stocks:
-
+    
     print(f"\nFetching data for {symbols}\n")
 
     date = before_2m_date
